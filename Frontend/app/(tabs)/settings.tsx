@@ -186,3 +186,121 @@ export default function SettingsScreen() {
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#f8fafc",
+  },
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingVertical: 20,
+  },
+  title: {
+    fontSize: 28,
+    fontFamily: "Inter-Bold",
+    color: "#1f2937",
+  },
+  versionBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#f0f9ff",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "#e0f2fe",
+  },
+  versionText: {
+    fontSize: 12,
+    fontFamily: "Inter-Medium",
+    color: "#0369a1",
+    marginLeft: 4,
+  },
+  content: {
+    paddingHorizontal: 20,
+  },
+  section: {
+    marginBottom: 32,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontFamily: "Inter-SemiBold",
+    color: "#6b7280",
+    marginBottom: 12,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  settingItem: {
+    backgroundColor: "#ffffff",
+    borderRadius: 12,
+    padding: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 8,
+    elevation: 2,
+    shadowColor: "#000000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+  },
+  settingIcon: {
+    width: 40,
+    height: 40,
+    backgroundColor: "#f0f9ff",
+    borderRadius: 20,
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 16,
+  },
+  settingContent: {
+    flex: 1,
+  },
+  settingTitle: {
+    fontSize: 16,
+    fontFamily: "Inter-SemiBold",
+    color: "#1f2937",
+    marginBottom: 2,
+  },
+  settingSubtitle: {
+    fontSize: 14,
+    fontFamily: "Inter-Regular",
+    color: "#6b7280",
+  },
+  appInfo: {
+    backgroundColor: "#ffffff",
+    borderRadius: 12,
+    padding: 20,
+    marginBottom: 20,
+    alignItems: "center",
+    elevation: 2,
+    shadowColor: "#000000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+  },
+  appInfoTitle: {
+    fontSize: 20,
+    fontFamily: "Inter-Bold",
+    color: "#1f2937",
+    marginBottom: 8,
+  },
+  appInfoSubtitle: {
+    fontSize: 14,
+    fontFamily: "Inter-Regular",
+    color: "#6b7280",
+    textAlign: "center",
+    marginBottom: 16,
+  },
+  disclaimer: {
+    fontSize: 12,
+    fontFamily: "Inter-Regular",
+    color: "#9ca3af",
+    textAlign: "center",
+    lineHeight: 16,
+    fontStyle: "italic",
+  },
+});
