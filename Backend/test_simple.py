@@ -31,3 +31,11 @@ def test_prediction():
         else:
             print(f"❌ Error: {response.status_code}")
             print(response.text)
+
+   except requests.exceptions.ConnectionError:
+        print("❌ Could not connect to server. Make sure the Flask app is running.")
+    except Exception as e:
+        print(f"❌ Error: {e}")
+
+if __name__ == "__main__":
+    test_prediction() 
