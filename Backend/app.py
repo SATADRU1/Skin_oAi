@@ -51,3 +51,54 @@ def predict_route():
         # Save image temporarily for Roboflow prediction
         temp_dir = tempfile.gettempdir()
         temp_path = os.path.join(temp_dir, 'temp_prediction.jpg')
+
+# Save the image
+        image.save(temp_path)
+        
+        # Get model and prediction from Roboflow
+        model = get_model()
+        if not model:
+            return jsonify({
+                'success': False,
+                'error': 'Failed to initialize model',
+                'class': 'Unknown',
+                'confidence': 0.0
+            }), 500
+
+result = model.predict(temp_path).json()
+        
+        # Clean up temp file
+        if os.path.exists(temp_path):
+            os.remove(temp_path)
+        
+        # Process the result
+        if result.get('predictions') and len(result['predictions']) > 0:
+            prediction = result['predictions'][0]
+            if prediction.get('predictions') and len(prediction['predictions']) > 0:
+                pred = prediction['predictions'][0]
+                class_name = pred.get('class', 'Unknown')
+                confidence = float(pred.get('confidence', 0.0))
+                
+                return jsonify({
+                    'success': True,
+                    'class': class_name,
+                    'confidence': confidence,
+                    'message': 'Prediction successful'
+                })
+                return jsonify({
+            'success': False,
+            'error': 'No prediction results',
+            'class': 'Unknown',
+            'confidence': 0.0
+        }), 500
+            
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': 'An unexpected error occurred',
+            'details': str(e)
+        }), 500
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000, debug=True)
+
