@@ -12,3 +12,22 @@ def test_prediction():
     except FileNotFoundError:
         print("Test image img1.jpg not found")
         return
+    # Prepare the request
+    url = "http://localhost:5000/predict"
+    data = {
+        "image": image_data
+    }
+    
+    try:
+        # Make the request
+        response = requests.post(url, json=data)
+        
+        if response.status_code == 200:
+            result = response.json()
+            print("✅ Prediction successful!")
+            print(f"Class: {result.get('class')}")
+            print(f"Confidence: {result.get('confidence')}")
+            print(f"Message: {result.get('message')}")
+        else:
+            print(f"❌ Error: {response.status_code}")
+            print(response.text)
