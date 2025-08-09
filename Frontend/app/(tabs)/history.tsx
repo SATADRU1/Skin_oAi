@@ -1,15 +1,13 @@
 import { Calendar, Filter, TrendingUp } from "lucide-react-native";
-import {
-  Image,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { Image, ScrollView, StyleSheet, TouchableOpacity } from "react-native";
+import { ThemedText } from "@/components/ThemedText";
+import { ThemedView } from "@/components/ThemedView";
+import { useTheme } from '@/hooks/useTheme'; // Import useTheme hook
 
 export default function HistoryScreen() {
+  const { theme } = useTheme(); // Use the global theme hook
+  const isDark = theme === "dark";
+
   const scans = [
     {
       id: "1",
@@ -68,96 +66,133 @@ export default function HistoryScreen() {
     }
   };
 
+  // Removed cardStyle constant, applying colors directly to ThemedView props
+
   return (
-    <SafeAreaView style={styles.container}>
+    <ThemedView style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.title}>Scan History</Text>
-        <View style={styles.headerActions}>
-          <TouchableOpacity style={styles.actionButton}>
-            <Filter size={20} color="#6b7280" />
+      <ThemedView style={styles.header}>
+        <ThemedText style={styles.title}>Scan History</ThemedText>
+        <ThemedView style={styles.headerActions}>
+          <TouchableOpacity>
+            {/* Apply themed background and shadows directly */}
+            <ThemedView
+              style={styles.actionButton}
+              lightColor="rgba(255,255,255,0.9)"
+              darkColor="rgba(255,255,255,0.05)"
+            >
+              <Filter size={20} color="#6b7280" />
+            </ThemedView>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.actionButton}>
-            <Calendar size={20} color="#6b7280" />
+          <TouchableOpacity>
+            {/* Apply themed background and shadows directly */}
+            <ThemedView
+              style={styles.actionButton}
+              lightColor="rgba(255,255,255,0.9)"
+              darkColor="rgba(255,255,255,0.05)"
+            >
+              <Calendar size={20} color="#6b7280" />
+            </ThemedView>
           </TouchableOpacity>
-        </View>
-      </View>
+        </ThemedView>
+      </ThemedView>
 
       {/* Summary Stats */}
-      <View style={styles.summaryContainer}>
-        <View style={styles.summaryCard}>
+      <ThemedView style={styles.summaryContainer}>
+        {/* Apply themed background and shadows directly */}
+        <ThemedView
+          style={styles.summaryCard}
+          lightColor="rgba(255,255,255,0.9)"
+          darkColor="rgba(255,255,255,0.05)"
+        >
           <TrendingUp size={24} color="#3b82f6" />
-          <View style={styles.summaryInfo}>
-            <Text style={styles.summaryValue}>{scans.length}</Text>
-            <Text style={styles.summaryLabel}>Total Scans</Text>
-          </View>
-        </View>
-        <View style={styles.summaryCard}>
-          <View
+          {/* Make summaryInfo background transparent */}
+          <ThemedView style={styles.summaryInfo} lightColor="transparent" darkColor="transparent">
+            <ThemedText style={styles.summaryValue}>{scans.length}</ThemedText>
+            <ThemedText style={styles.summaryLabel}>Total Scans</ThemedText>
+          </ThemedView>
+        </ThemedView>
+        {/* Apply themed background and shadows directly */}
+        <ThemedView
+          style={styles.summaryCard}
+          lightColor="rgba(255,255,255,0.9)"
+          darkColor="rgba(255,255,255,0.05)"
+        >
+          <ThemedView
             style={[styles.healthIndicator, { backgroundColor: "#10b981" }]}
           />
-          <View style={styles.summaryInfo}>
-            <Text style={styles.summaryValue}>
+          {/* Make summaryInfo background transparent */}
+          <ThemedView style={styles.summaryInfo} lightColor="transparent" darkColor="transparent">
+            <ThemedText style={styles.summaryValue}>
               {scans.filter((s) => s.severity === "None").length}
-            </Text>
-            <Text style={styles.summaryLabel}>Healthy</Text>
-          </View>
-        </View>
-      </View>
+            </ThemedText>
+            <ThemedText style={styles.summaryLabel}>Healthy</ThemedText>
+          </ThemedView>
+        </ThemedView>
+      </ThemedView>
 
       {/* Scan List */}
       <ScrollView style={styles.scanList} showsVerticalScrollIndicator={false}>
         {scans.map((scan) => (
-          <TouchableOpacity key={scan.id} style={styles.scanCard}>
-            <Image source={{ uri: scan.image }} style={styles.scanImage} />
-
-            <View style={styles.scanDetails}>
-              <View style={styles.scanHeader}>
-                <Text style={styles.scanCondition}>{scan.condition}</Text>
-                <View style={styles.confidenceBadge}>
-                  <Text style={styles.confidenceText}>{scan.confidence}%</Text>
-                </View>
-              </View>
-
-              <View style={styles.scanMeta}>
-                <Text style={styles.scanDate}>
-                  {scan.date} • {scan.time}
-                </Text>
-                <View
-                  style={[
-                    styles.severityBadge,
-                    { backgroundColor: getSeverityColor(scan.severity) + "20" },
-                  ]}
-                >
-                  <View
+          <TouchableOpacity key={scan.id}>
+            {/* Apply themed background and shadows directly */}
+            <ThemedView
+              style={styles.scanCard}
+              lightColor="rgba(255,255,255,0.9)"
+              darkColor="rgba(255,255,255,0.05)"
+            >
+              <Image source={{ uri: scan.image }} style={styles.scanImage} />
+              {/* Make scanDetails background transparent */}
+              <ThemedView style={styles.scanDetails} lightColor="transparent" darkColor="transparent">
+                {/* Make scanHeader background transparent */}
+                <ThemedView style={styles.scanHeader} lightColor="transparent" darkColor="transparent">
+                  <ThemedText style={styles.scanCondition}>
+                    {scan.condition}
+                  </ThemedText>
+                  <ThemedView style={styles.confidenceBadge}>
+                    <ThemedText style={styles.confidenceText}>
+                      {scan.confidence}%
+                    </ThemedText>
+                  </ThemedView>
+                </ThemedView>
+                {/* Make scanMeta background transparent */}
+                <ThemedView style={styles.scanMeta} lightColor="transparent" darkColor="transparent">
+                  <ThemedText style={styles.scanDate}>
+                    {scan.date} • {scan.time}
+                  </ThemedText>
+                  <ThemedView
                     style={[
-                      styles.severityDot,
-                      { backgroundColor: getSeverityColor(scan.severity) },
-                    ]}
-                  />
-                  <Text
-                    style={[
-                      styles.severityText,
-                      { color: getSeverityColor(scan.severity) },
+                      styles.severityBadge,
+                      { backgroundColor: getSeverityColor(scan.severity) + "20" },
                     ]}
                   >
-                    {scan.severity}
-                  </Text>
-                </View>
-              </View>
-            </View>
+                    <ThemedView
+                      style={[
+                        styles.severityDot,
+                        { backgroundColor: getSeverityColor(scan.severity) },
+                      ]}
+                    />
+                    <ThemedText
+                      style={[
+                        styles.severityText,
+                        { color: getSeverityColor(scan.severity) },
+                      ]}
+                    >
+                      {scan.severity}
+                    </ThemedText>
+                  </ThemedView>
+                </ThemedView>
+              </ThemedView>
+            </ThemedView>
           </TouchableOpacity>
         ))}
       </ScrollView>
-    </SafeAreaView>
+    </ThemedView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#f8fafc",
-  },
+  container: { flex: 1 },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -168,24 +203,21 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontFamily: "Inter-Bold",
-    color: "#1f2937",
   },
-  headerActions: {
-    flexDirection: "row",
-  },
+  headerActions: { flexDirection: "row" },
   actionButton: {
+    borderRadius: 20,
     width: 40,
     height: 40,
-    backgroundColor: "#ffffff",
-    borderRadius: 20,
     justifyContent: "center",
     alignItems: "center",
     marginLeft: 8,
-    elevation: 2,
-    shadowColor: "#000000",
+    // Moved shadow properties from cardStyle
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.15, // Default for light mode
     shadowRadius: 3,
+    elevation: 2,
   },
   summaryContainer: {
     flexDirection: "row",
@@ -193,74 +225,45 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   summaryCard: {
-    backgroundColor: "#ffffff",
     borderRadius: 12,
     padding: 16,
     flexDirection: "row",
     alignItems: "center",
     flex: 1,
     marginHorizontal: 4,
-    elevation: 2,
-    shadowColor: "#000000",
+    // Moved shadow properties from cardStyle
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.15, // Default for light mode
     shadowRadius: 3,
+    elevation: 2,
   },
-  summaryInfo: {
-    marginLeft: 12,
-  },
-  summaryValue: {
-    fontSize: 20,
-    fontFamily: "Inter-Bold",
-    color: "#1f2937",
-  },
-  summaryLabel: {
-    fontSize: 12,
-    fontFamily: "Inter-Regular",
-    color: "#6b7280",
-    marginTop: 2,
-  },
-  healthIndicator: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-  },
-  scanList: {
-    paddingHorizontal: 20,
-  },
+  summaryInfo: { marginLeft: 12 },
+  summaryValue: { fontSize: 20, fontFamily: "Inter-Bold" },
+  summaryLabel: { fontSize: 12, fontFamily: "Inter-Regular", marginTop: 2 },
+  healthIndicator: { width: 24, height: 24, borderRadius: 12 },
+  scanList: { paddingHorizontal: 20 },
   scanCard: {
-    backgroundColor: "#ffffff",
     borderRadius: 12,
     padding: 16,
     flexDirection: "row",
     marginBottom: 12,
-    elevation: 2,
-    shadowColor: "#000000",
+    // Moved shadow properties from cardStyle
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.15, // Default for light mode
     shadowRadius: 3,
+    elevation: 2,
   },
-  scanImage: {
-    width: 60,
-    height: 60,
-    borderRadius: 8,
-    marginRight: 16,
-  },
-  scanDetails: {
-    flex: 1,
-  },
+  scanImage: { width: 60, height: 60, borderRadius: 8, marginRight: 16 },
+  scanDetails: { flex: 1 },
   scanHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
     marginBottom: 8,
   },
-  scanCondition: {
-    fontSize: 16,
-    fontFamily: "Inter-SemiBold",
-    color: "#1f2937",
-    flex: 1,
-  },
+  scanCondition: { fontSize: 16, fontFamily: "Inter-SemiBold", flex: 1 },
   confidenceBadge: {
     backgroundColor: "#f0f9ff",
     paddingHorizontal: 8,
@@ -279,11 +282,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
   },
-  scanDate: {
-    fontSize: 14,
-    fontFamily: "Inter-Regular",
-    color: "#6b7280",
-  },
+  scanDate: { fontSize: 14, fontFamily: "Inter-Regular" },
   severityBadge: {
     flexDirection: "row",
     alignItems: "center",
@@ -291,14 +290,6 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 6,
   },
-  severityDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    marginRight: 4,
-  },
-  severityText: {
-    fontSize: 12,
-    fontFamily: "Inter-Medium",
-  },
+  severityDot: { width: 6, height: 6, borderRadius: 3, marginRight: 4 },
+  severityText: { fontSize: 12, fontFamily: "Inter-Medium" },
 });

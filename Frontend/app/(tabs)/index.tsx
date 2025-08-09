@@ -13,11 +13,12 @@ import {
   Image,
   ScrollView,
   StyleSheet,
-  Text,
+  // Removed Text and View as they will be replaced by ThemedText and ThemedView
   TouchableOpacity,
-  View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+// Removed SafeAreaView as it will be replaced by ThemedView
+import { ThemedText } from '@/components/ThemedText'; // Import ThemedText
+import { ThemedView } from '@/components/ThemedView'; // Import ThemedView
 
 const { width } = Dimensions.get("window");
 
@@ -74,18 +75,19 @@ export default function HomeScreen() {
   ];
 
   return (
-    <SafeAreaView style={styles.container}>
+    // Replace SafeAreaView with ThemedView
+    <ThemedView style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Header */}
-        <View style={styles.header}>
-          <View>
-            <Text style={styles.greeting}>Hello there!</Text>
-            <Text style={styles.subtitle}>How can I help you today?</Text>
-          </View>
-          <View style={styles.profileIcon}>
+        <ThemedView style={styles.header}>
+          <ThemedView>
+            <ThemedText style={styles.greeting}>Hello there!</ThemedText>
+            <ThemedText style={styles.subtitle}>How can I help you today?</ThemedText>
+          </ThemedView>
+          <ThemedView style={styles.profileIcon}>
             <Award size={24} color="#3b82f6" />
-          </View>
-        </View>
+          </ThemedView>
+        </ThemedView>
 
         {/* Main Scan Button */}
         <TouchableOpacity
@@ -97,71 +99,76 @@ export default function HomeScreen() {
             colors={["#3b82f6", "#1d4ed8"]}
             style={styles.scanButton}
           >
-            <View style={styles.scanIconContainer}>
+            <ThemedView style={styles.scanIconContainer}>
               <Camera size={32} color="#ffffff" strokeWidth={2.5} />
-            </View>
-            <View style={styles.scanContent}>
-              <Text style={styles.scanTitle}>Scan Your Skin</Text>
-              <Text style={styles.scanSubtitle}>
-                Get instant AI-powered analysis
-              </Text>
-            </View>
+            </ThemedView>
+            <ThemedView style={styles.scanContent} lightColor="transparent" darkColor="transparent">
+              <ThemedText style={styles.scanButtonText}>New Scan</ThemedText>
+              <ThemedText style={styles.scanButtonSubtitle}>
+                Analyze your skin condition
+              </ThemedText>
+            </ThemedView>
           </LinearGradient>
         </TouchableOpacity>
 
-        {/* Stats Cards */}
-        <View style={styles.statsContainer}>
-          <Text style={styles.sectionTitle}>Your Progress</Text>
-          <View style={styles.statsGrid}>
-            {stats.map((stat, index) => (
-              <View key={index} style={styles.statCard}>
-                <View
-                  style={[
-                    styles.statIcon,
-                    { backgroundColor: `${stat.color}15` },
-                  ]}
-                >
-                  <stat.icon size={20} color={stat.color} strokeWidth={2} />
-                </View>
-                <Text style={styles.statValue}>{stat.value}</Text>
-                <Text style={styles.statLabel}>{stat.label}</Text>
-              </View>
-            ))}
-          </View>
-        </View>
+        {/* Stats Section */}
+        <ThemedView style={styles.statsContainer}>
+          {stats.map((stat, index) => (
+            <ThemedView key={index} style={styles.statCard}>
+              <ThemedView style={[styles.statIconWrapper, { backgroundColor: `${stat.color}20` }]}>
+                <stat.icon size={24} color={stat.color} />
+              </ThemedView>
+              <ThemedText style={styles.statValue}>{stat.value}</ThemedText>
+              <ThemedText style={styles.statLabel}>{stat.label}</ThemedText>
+            </ThemedView>
+          ))}
+        </ThemedView>
 
-        {/* Recent Scans */}
-        <View style={styles.recentScans}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Recent Scans</Text>
-            <TouchableOpacity onPress={() => router.push("/(tabs)/history")}>
-              <Text style={styles.viewAllText}>View All</Text>
-            </TouchableOpacity>
-          </View>
+        {/* Recent Scans Section */}
+        <ThemedView style={styles.recentScansHeader}>
+          <ThemedText style={styles.sectionTitle}>Recent Scans</ThemedText>
+          <TouchableOpacity onPress={() => router.push("/history")}>
+            <ThemedText style={styles.viewAllText}>View All</ThemedText>
+          </TouchableOpacity>
+        </ThemedView>
 
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.recentScansList}
+        >
           {recentScans.map((scan) => (
-            <TouchableOpacity key={scan.id} style={styles.scanItem}>
+            <TouchableOpacity
+              key={scan.id}
+              style={styles.scanCard}
+              onPress={() => router.push({ pathname: "/result", params: { image: scan.image, text: scan.condition } })}
+            >
               <Image source={{ uri: scan.image }} style={styles.scanImage} />
-              <View style={styles.scanInfo}>
-                <Text style={styles.scanCondition}>{scan.condition}</Text>
-                <Text style={styles.scanDate}>{scan.date}</Text>
-              </View>
-              <View style={styles.confidenceContainer}>
-                <Text style={styles.confidenceText}>{scan.confidence}%</Text>
-                <Clock size={16} color="#6b7280" />
-              </View>
+              <ThemedView style={styles.scanCardContent}>
+                <ThemedText style={styles.scanCondition}>{scan.condition}</ThemedText>
+                <ThemedView style={styles.scanDetails}>
+                  <Clock size={14} color="#6b7280" />
+                  <ThemedText style={styles.scanDate}>{scan.date}</ThemedText>
+                </ThemedView>
+                <ThemedView style={styles.scanDetails}>
+                  <Shield size={14} color="#6b7280" />
+                  <ThemedText style={styles.scanConfidence}>
+                    Confidence: {scan.confidence}%
+                  </ThemedText>
+                </ThemedView>
+              </ThemedView>
             </TouchableOpacity>
           ))}
-        </View>
+        </ScrollView>
       </ScrollView>
-    </SafeAreaView>
+    </ThemedView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f8fafc",
+    // backgroundColor will be handled by ThemedView
   },
   header: {
     flexDirection: "row",
@@ -171,167 +178,158 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
   },
   greeting: {
-    fontSize: 28,
+    fontSize: 24,
     fontFamily: "Inter-Bold",
-    color: "#1f2937",
+    // color will be handled by ThemedText
   },
   subtitle: {
     fontSize: 16,
     fontFamily: "Inter-Regular",
-    color: "#6b7280",
-    marginTop: 4,
+    // color will be handled by ThemedText
   },
   profileIcon: {
     width: 48,
     height: 48,
-    backgroundColor: "#f0f9ff",
     borderRadius: 24,
+    backgroundColor: "#e0f2fe", // Specific accent color, can remain hardcoded
     justifyContent: "center",
     alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#e0f2fe",
   },
   scanButtonContainer: {
     marginHorizontal: 20,
-    marginBottom: 32,
+    borderRadius: 15,
+    overflow: "hidden",
+    marginBottom: 30,
+    elevation: 5,
+    shadowColor: "#3b82f6",
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
   },
   scanButton: {
-    borderRadius: 16,
-    padding: 24,
     flexDirection: "row",
     alignItems: "center",
-    elevation: 8,
-    shadowColor: "#3b82f6",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
+    padding: 20,
   },
   scanIconContainer: {
-    width: 64,
-    height: 64,
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
-    borderRadius: 32,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: "rgba(255,255,255,0.2)",
     justifyContent: "center",
     alignItems: "center",
-    marginRight: 16,
+    marginRight: 15,
   },
   scanContent: {
     flex: 1,
   },
-  scanTitle: {
-    fontSize: 20,
-    fontFamily: "Inter-Bold",
-    color: "#ffffff",
-    marginBottom: 4,
+  scanButtonText: {
+    fontSize: 22,
+    fontFamily: "Inter-SemiBold",
+    color: "#ffffff", // This text should remain white on the gradient button
   },
-  scanSubtitle: {
+  scanButtonSubtitle: {
     fontSize: 14,
     fontFamily: "Inter-Regular",
-    color: "rgba(255, 255, 255, 0.8)",
+    color: "rgba(255,255,255,0.8)", // This text should remain white on the gradient button
   },
   statsContainer: {
-    paddingHorizontal: 20,
-    marginBottom: 32,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontFamily: "Inter-SemiBold",
-    color: "#1f2937",
-    marginBottom: 16,
-  },
-  statsGrid: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    justifyContent: "space-around",
+    marginHorizontal: 20,
+    marginBottom: 30,
+    // backgroundColor will be handled by ThemedView
+    borderRadius: 15,
+    paddingVertical: 20,
+    elevation: 3,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
   },
   statCard: {
-    backgroundColor: "#ffffff",
-    borderRadius: 12,
-    padding: 16,
     alignItems: "center",
-    flex: 1,
-    marginHorizontal: 4,
-    elevation: 2,
-    shadowColor: "#000000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
   },
-  statIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+  statIconWrapper: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 8,
   },
   statValue: {
-    fontSize: 18,
+    fontSize: 20,
     fontFamily: "Inter-Bold",
-    color: "#1f2937",
-    marginBottom: 4,
+    // color will be handled by ThemedText
   },
   statLabel: {
-    fontSize: 12,
+    fontSize: 14,
     fontFamily: "Inter-Regular",
-    color: "#6b7280",
-    textAlign: "center",
+    // color will be handled by ThemedText
   },
-  recentScans: {
-    paddingHorizontal: 20,
-    paddingBottom: 20,
-  },
-  sectionHeader: {
+  recentScansHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 16,
+    marginHorizontal: 20,
+    marginBottom: 15,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontFamily: "Inter-SemiBold",
+    // color will be handled by ThemedText
   },
   viewAllText: {
     fontSize: 14,
     fontFamily: "Inter-Medium",
-    color: "#3b82f6",
+    color: "#3b82f6", // Specific accent color, can remain hardcoded
   },
-  scanItem: {
-    backgroundColor: "#ffffff",
-    borderRadius: 12,
-    padding: 16,
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 12,
-    elevation: 2,
-    shadowColor: "#000000",
-    shadowOffset: { width: 0, height: 1 },
+  recentScansList: {
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+  },
+  scanCard: {
+    width: width * 0.45,
+    marginRight: 15,
+    // backgroundColor will be handled by ThemedView
+    borderRadius: 15,
+    overflow: "hidden",
+    elevation: 3,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 3,
+    shadowRadius: 5,
   },
   scanImage: {
-    width: 48,
-    height: 48,
-    borderRadius: 8,
-    marginRight: 12,
+    width: "100%",
+    height: 120,
+    resizeMode: "cover",
   },
-  scanInfo: {
-    flex: 1,
+  scanCardContent: {
+    padding: 12,
   },
   scanCondition: {
     fontSize: 16,
     fontFamily: "Inter-SemiBold",
-    color: "#1f2937",
-    marginBottom: 4,
+    // color will be handled by ThemedText
+    marginBottom: 5,
   },
-  scanDate: {
-    fontSize: 14,
-    fontFamily: "Inter-Regular",
-    color: "#6b7280",
-  },
-  confidenceContainer: {
+  scanDetails: {
     flexDirection: "row",
     alignItems: "center",
+    marginBottom: 3,
   },
-  confidenceText: {
-    fontSize: 14,
-    fontFamily: "Inter-Medium",
-    color: "#10b981",
-    marginRight: 4,
+  scanDate: {
+    fontSize: 12,
+    fontFamily: "Inter-Regular",
+    // color will be handled by ThemedText
+    marginLeft: 5,
+  },
+  scanConfidence: {
+    fontSize: 12,
+    fontFamily: "Inter-Regular",
+    // color will be handled by ThemedText
+    marginLeft: 5,
   },
 });

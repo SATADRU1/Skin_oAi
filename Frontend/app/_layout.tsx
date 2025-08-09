@@ -10,6 +10,7 @@ import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
+import { ThemeProvider } from '@/contexts/ThemeContext'; // Import ThemeProvider
 
 SplashScreen.preventAutoHideAsync();
 
@@ -34,7 +35,7 @@ export default function RootLayout() {
   }
 
   return (
-    <>
+    <ThemeProvider> {/* Wrap the entire app with ThemeProvider */}
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="splash" />
         <Stack.Screen name="(tabs)" />
@@ -43,7 +44,6 @@ export default function RootLayout() {
         <Stack.Screen name="+not-found" />
       </Stack>
       <StatusBar style="light" />
-    </>
+    </ThemeProvider>
   );
 }
-

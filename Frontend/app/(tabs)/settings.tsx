@@ -16,14 +16,18 @@ import {
   ScrollView,
   StyleSheet,
   Switch,
-  Text,
+  // Removed Text and View as they will be replaced by ThemedText and ThemedView
   TouchableOpacity,
-  View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+// Removed SafeAreaView as it will be replaced by ThemedView
+import { useTheme } from '@/hooks/useTheme';
+import { ThemedText } from '@/components/ThemedText';
+import { ThemedView } from '@/components/ThemedView';
 
 export default function SettingsScreen() {
-  const [darkMode, setDarkMode] = useState(false);
+  // Removed local darkMode state, now using global theme
+  // const [darkMode, setDarkMode] = useState(false);
+  const { theme, toggleTheme } = useTheme(); // Use the global theme hook
   const [notifications, setNotifications] = useState(true);
   const [dataSharing, setDataSharing] = useState(false);
 
@@ -32,12 +36,13 @@ export default function SettingsScreen() {
       title: "Preferences",
       items: [
         {
-          icon: darkMode ? Moon : Sun,
+          // Use global theme for icon and toggle logic
+          icon: theme === 'dark' ? Moon : Sun,
           title: "Dark Mode",
           subtitle: "Toggle dark theme",
           type: "switch",
-          value: darkMode,
-          onToggle: setDarkMode,
+          value: theme === 'dark', // Value reflects global theme
+          onToggle: toggleTheme, // Toggles global theme
         },
         {
           icon: Bell,
@@ -125,72 +130,81 @@ export default function SettingsScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    // Use ThemedView for the main container to apply theme background
+    <ThemedView style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.title}>Settings</Text>
-        <View style={styles.versionBadge}>
+      <ThemedView style={styles.header}>
+        <ThemedText style={styles.title}>Settings</ThemedText>
+        <ThemedView style={styles.versionBadge}>
           <Smartphone size={16} color="#3b82f6" />
-          <Text style={styles.versionText}>v1.0.0</Text>
-        </View>
-      </View>
+          <ThemedText style={styles.versionText}>v1.0.0</ThemedText>
+        </ThemedView>
+      </ThemedView>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {settingSections.map((section, sectionIndex) => (
-          <View key={sectionIndex} style={styles.section}>
-            <Text style={styles.sectionTitle}>{section.title}</Text>
+          // Use ThemedView for sections to apply theme background
+          <ThemedView key={sectionIndex} style={styles.section}>
+            <ThemedText style={styles.sectionTitle}>{section.title}</ThemedText>
 
-            {section.items.map((item, itemIndex) => (
-              <TouchableOpacity
-                key={itemIndex}
-                style={styles.settingItem}
-                onPress={item.onPress}
-                disabled={item.type === "switch"}
-              >
-                <View style={styles.settingIcon}>
-                  <item.icon size={20} color="#3b82f6" strokeWidth={2} />
-                </View>
+            {section.items.map((item, itemIndex) => {
+              // Conditionally render TouchableOpacity for navigation items,
+              // and ThemedView for switch items to allow interaction with the Switch.
+              const ItemWrapper = item.type === "switch" ? ThemedView : TouchableOpacity;
 
-                <View style={styles.settingContent}>
-                  <Text style={styles.settingTitle}>{item.title}</Text>
-                  <Text style={styles.settingSubtitle}>{item.subtitle}</Text>
-                </View>
+              return (
+                <ItemWrapper
+                  key={itemIndex}
+                  style={styles.settingItem}
+                  // Only apply onPress for navigation type items
+                  onPress={item.type === "navigation" ? item.onPress : undefined}
+                  // The 'disabled' prop is no longer needed on ItemWrapper
+                >
+                  <ThemedView style={styles.settingIcon}>
+                    <item.icon size={20} color="#3b82f6" strokeWidth={2} />
+                  </ThemedView>
 
-                {item.type === "switch" ? (
-                  <Switch
-                    value={item.value}
-                    onValueChange={item.onToggle}
-                    trackColor={{ false: "#f3f4f6", true: "#3b82f6" }}
-                    thumbColor={item.value ? "#ffffff" : "#9ca3af"}
-                  />
-                ) : (
-                  <ChevronRight size={20} color="#9ca3af" />
-                )}
-              </TouchableOpacity>
-            ))}
-          </View>
+                  <ThemedView style={styles.settingContent}>
+                    <ThemedText style={styles.settingTitle}>{item.title}</ThemedText>
+                    <ThemedText style={styles.settingSubtitle}>{item.subtitle}</ThemedText>
+                  </ThemedView>
+
+                  {item.type === "switch" ? (
+                    <Switch
+                      value={item.value}
+                      onValueChange={item.onToggle}
+                      trackColor={{ false: theme === 'light' ? "#f3f4f6" : "#4b5563", true: "#3b82f6" }}
+                      thumbColor={item.value ? "#ffffff" : (theme === 'light' ? "#9ca3af" : "#d1d5db")}
+                    />
+                  ) : (
+                    <ChevronRight size={20} color="#9ca3af" />
+                  )}
+                </ItemWrapper>
+              );
+            })}
+          </ThemedView>
         ))}
 
         {/* App Info */}
-        <View style={styles.appInfo}>
-          <Text style={styles.appInfoTitle}>Skin AI</Text>
-          <Text style={styles.appInfoSubtitle}>
+        <ThemedView style={styles.appInfo}>
+          <ThemedText style={styles.appInfoTitle}>Skin AI</ThemedText>
+          <ThemedText style={styles.appInfoSubtitle}>
             Advanced skin analysis powered by artificial intelligence
-          </Text>
-          <Text style={styles.disclaimer}>
+          </ThemedText>
+          <ThemedText style={styles.disclaimer}>
             This app is not a substitute for professional medical advice. Always
             consult with a healthcare provider for medical concerns.
-          </Text>
-        </View>
+          </ThemedText>
+        </ThemedView>
       </ScrollView>
-    </SafeAreaView>
+    </ThemedView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f8fafc",
+    // backgroundColor will be handled by ThemedView
   },
   header: {
     flexDirection: "row",
@@ -198,16 +212,17 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 20,
     paddingVertical: 20,
+    // backgroundColor will be handled by ThemedView (inherits from container)
   },
   title: {
     fontSize: 28,
     fontFamily: "Inter-Bold",
-    color: "#1f2937",
+    // color will be handled by ThemedText
   },
   versionBadge: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#f0f9ff",
+    backgroundColor: "#f0f9ff", // Keeping this hardcoded as it's a specific accent
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,
@@ -217,7 +232,7 @@ const styles = StyleSheet.create({
   versionText: {
     fontSize: 12,
     fontFamily: "Inter-Medium",
-    color: "#0369a1",
+    color: "#0369a1", // Keeping this hardcoded as it's a specific accent
     marginLeft: 4,
   },
   content: {
@@ -225,17 +240,24 @@ const styles = StyleSheet.create({
   },
   section: {
     marginBottom: 32,
+    // backgroundColor will be handled by ThemedView
+    borderRadius: 12,
+    shadowColor: "#000000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 2,
   },
   sectionTitle: {
     fontSize: 16,
     fontFamily: "Inter-SemiBold",
-    color: "#6b7280",
+    // color will be handled by ThemedText
     marginBottom: 12,
     textTransform: "uppercase",
     letterSpacing: 0.5,
   },
   settingItem: {
-    backgroundColor: "#ffffff",
+    // backgroundColor will be handled by ThemedView
     borderRadius: 12,
     padding: 16,
     flexDirection: "row",
@@ -250,7 +272,7 @@ const styles = StyleSheet.create({
   settingIcon: {
     width: 40,
     height: 40,
-    backgroundColor: "#f0f9ff",
+    backgroundColor: "#f0f9ff", // Keeping this hardcoded as it's a specific accent
     borderRadius: 20,
     justifyContent: "center",
     alignItems: "center",
@@ -262,16 +284,16 @@ const styles = StyleSheet.create({
   settingTitle: {
     fontSize: 16,
     fontFamily: "Inter-SemiBold",
-    color: "#1f2937",
+    // color will be handled by ThemedText
     marginBottom: 2,
   },
   settingSubtitle: {
     fontSize: 14,
     fontFamily: "Inter-Regular",
-    color: "#6b7280",
+    // color will be handled by ThemedText
   },
   appInfo: {
-    backgroundColor: "#ffffff",
+    // backgroundColor will be handled by ThemedView
     borderRadius: 12,
     padding: 20,
     marginBottom: 20,
@@ -285,20 +307,20 @@ const styles = StyleSheet.create({
   appInfoTitle: {
     fontSize: 20,
     fontFamily: "Inter-Bold",
-    color: "#1f2937",
+    // color will be handled by ThemedText
     marginBottom: 8,
   },
   appInfoSubtitle: {
     fontSize: 14,
     fontFamily: "Inter-Regular",
-    color: "#6b7280",
+    // color will be handled by ThemedText
     textAlign: "center",
     marginBottom: 16,
   },
   disclaimer: {
     fontSize: 12,
     fontFamily: "Inter-Regular",
-    color: "#9ca3af",
+    // color will be handled by ThemedText
     textAlign: "center",
     lineHeight: 16,
     fontStyle: "italic",
