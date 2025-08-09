@@ -51,3 +51,16 @@ def predict_route():
         # Save image temporarily for Roboflow prediction
         temp_dir = tempfile.gettempdir()
         temp_path = os.path.join(temp_dir, 'temp_prediction.jpg')
+
+# Save the image
+        image.save(temp_path)
+        
+        # Get model and prediction from Roboflow
+        model = get_model()
+        if not model:
+            return jsonify({
+                'success': False,
+                'error': 'Failed to initialize model',
+                'class': 'Unknown',
+                'confidence': 0.0
+            }), 500
