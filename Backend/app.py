@@ -85,3 +85,20 @@ result = model.predict(temp_path).json()
                     'confidence': confidence,
                     'message': 'Prediction successful'
                 })
+                return jsonify({
+            'success': False,
+            'error': 'No prediction results',
+            'class': 'Unknown',
+            'confidence': 0.0
+        }), 500
+            
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': 'An unexpected error occurred',
+            'details': str(e)
+        }), 500
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000, debug=True)
+
