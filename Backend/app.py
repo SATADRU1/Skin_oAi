@@ -11,7 +11,7 @@ app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
 
 # Initialize Roboflow connection
-rf = Roboflow(api_key="K3NtQYY2EhfGyAd78fvK")
+rf = Roboflow(api_key="............")
 project = rf.workspace().project("my-first-project-apmvj")
 
 def get_model():
@@ -32,3 +32,22 @@ def ping():
 
 @app.route('/predict', methods=['POST'])
 def predict_route():
+    try:
+        # Check if request has JSON data
+        if not request.is_json:
+            return jsonify({'error': 'Request must be JSON', 'success': False}), 400
+
+        # Validate required fields
+        if not data or 'image' not in data:
+            return jsonify({'error': 'Missing image data', 'success': False}), 400
+        
+        # Decode the image from base64
+        try:
+            img_data = base64.b64decode(data['image'])
+            image = Image.open(io.BytesIO(img_data)).convert("RGB")
+        except Exception as e:
+            return jsonify({'error': 'Invalid image data', 'success': False}), 400
+
+        # Save image temporarily for Roboflow prediction
+        temp_dir = tempfile.gettempdir()
+        temp_path = os.path.join(temp_dir, 'temp_prediction.jpg')
