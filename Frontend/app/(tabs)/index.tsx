@@ -31,7 +31,7 @@ export default function HomeScreen() {
       time: "10:30 AM",
       condition: "Melanoma",
       confidence: 95,
-      severity: "None",
+      severity: "Mild",
       image:
         "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6c/Melanoma.jpg/250px-Melanoma.jpg",
     },
@@ -68,7 +68,7 @@ export default function HomeScreen() {
   ];
 
   const stats = [
-    { icon: Scan, label: "Total Scans", value: "12", color: "#3b82f6" },
+    { icon: Scan, label: "Total Scans", value: "4", color: "#3b82f6" },
     { icon: TrendingUp, label: "Accuracy", value: "94%", color: "#10b981" },
     { icon: Shield, label: "Reliability", value: "99%", color: "#8b5cf6" },
   ];

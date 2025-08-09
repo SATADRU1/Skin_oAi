@@ -17,7 +17,7 @@ export default function HistoryScreen() {
       time: "10:30 AM",
       condition: "Melanoma",
       confidence: 95,
-      severity: "None",
+      severity: "Mild",
       image:
         "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6c/Melanoma.jpg/250px-Melanoma.jpg",
     },
