@@ -231,16 +231,16 @@ const styles = StyleSheet.create({
   },
   background: {
     flex: 1,
-    padding: 24,
-    justifyContent: 'center',
   },
   keyboardAvoidingView: {
     flex: 1,
-    justifyContent: 'center',
+    paddingHorizontal: 24,
   },
   scrollView: {
     flexGrow: 1,
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
+    paddingTop: 50,
+    paddingBottom: 100,
   },
   header: {
     marginBottom: 32,
