@@ -61,7 +61,7 @@ export default function SplashScreen() {
           </Animated.View>
         </View>
 
-        <Text style={styles.title}>Skin AI</Text>
+        <Text style={styles.title}>SkinOAI</Text>
         <Text style={styles.subtitle}>Powered by AI</Text>
 
         <View style={styles.tagline}>
