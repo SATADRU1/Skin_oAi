@@ -34,8 +34,13 @@ export default function RootLayout() {
     return null;
   }
 
+  // Don't render anything until fonts are loaded
+  if (!fontsLoaded && !fontError) {
+    return null;
+  }
+
   return (
-    <ThemeProvider> {/* Wrap the entire app with ThemeProvider */}
+    <ThemeProvider>
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="splash" />
         <Stack.Screen name="(tabs)" />

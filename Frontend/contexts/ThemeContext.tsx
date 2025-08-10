@@ -13,7 +13,8 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const systemColorScheme = useColorScheme();
-  const [theme, setTheme] = useState<Theme>(systemColorScheme || 'light');
+  const [theme, setTheme] = useState<Theme | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const loadTheme = async () => {
@@ -27,11 +28,18 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       } catch (e) {
         console.error('Failed to load theme from storage', e);
         setTheme(systemColorScheme || 'light');
+      } finally {
+        setIsLoading(false);
       }
     };
 
     loadTheme();
   }, [systemColorScheme]);
+
+  // Don't render children until theme is loaded
+  if (isLoading || theme === null) {
+    return null;
+  }
 
   const toggleTheme = async () => {
     const newTheme = theme === 'light' ? 'dark' : 'light';

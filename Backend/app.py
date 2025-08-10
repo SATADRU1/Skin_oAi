@@ -5,22 +5,15 @@ import base64
 import io
 import tempfile
 import os
-from roboflow import Roboflow
+from model_utils import load_model, predict_image
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
 
-# Initialize Roboflow connection
-rf = Roboflow(api_key="............")
-project = rf.workspace().project("my-first-project-apmvj")
-
-def get_model():
-    """Get the Roboflow model instance"""
-    try:
-        return project.version(1).model
-    except Exception as e:
-        print(f"Error getting model: {e}")
-        return None
+# Load the model when the app starts
+model = load_model()
+if not model:
+    print("Failed to load model. The application may not work correctly.")
       
 @app.route('/')
 def home():
@@ -37,6 +30,9 @@ def predict_route():
         if not request.is_json:
             return jsonify({'error': 'Request must be JSON', 'success': False}), 400
 
+        # Get JSON data
+        data = request.get_json()
+        
         # Validate required fields
         if not data or 'image' not in data:
             return jsonify({'error': 'Missing image data', 'success': False}), 400
@@ -48,49 +44,42 @@ def predict_route():
         except Exception as e:
             return jsonify({'error': 'Invalid image data', 'success': False}), 400
 
-        # Save image temporarily for Roboflow prediction
+        # Save image temporarily for prediction
         temp_dir = tempfile.gettempdir()
         temp_path = os.path.join(temp_dir, 'temp_prediction.jpg')
-
-# Save the image
         image.save(temp_path)
         
-        # Get model and prediction from Roboflow
-        model = get_model()
+        # Check if model is loaded
         if not model:
             return jsonify({
                 'success': False,
-                'error': 'Failed to initialize model',
+                'error': 'Model not loaded',
                 'class': 'Unknown',
                 'confidence': 0.0
             }), 500
 
-result = model.predict(temp_path).json()
+        # Get prediction
+        prediction = predict_image(model, temp_path)
         
         # Clean up temp file
         if os.path.exists(temp_path):
             os.remove(temp_path)
         
-        # Process the result
-        if result.get('predictions') and len(result['predictions']) > 0:
-            prediction = result['predictions'][0]
-            if prediction.get('predictions') and len(prediction['predictions']) > 0:
-                pred = prediction['predictions'][0]
-                class_name = pred.get('class', 'Unknown')
-                confidence = float(pred.get('confidence', 0.0))
-                
-                return jsonify({
-                    'success': True,
-                    'class': class_name,
-                    'confidence': confidence,
-                    'message': 'Prediction successful'
-                })
-                return jsonify({
-            'success': False,
-            'error': 'No prediction results',
-            'class': 'Unknown',
-            'confidence': 0.0
-        }), 500
+        # Handle prediction result
+        if 'error' in prediction:
+            return jsonify({
+                'success': False,
+                'error': prediction['error'],
+                'class': 'Unknown',
+                'confidence': 0.0
+            }), 500
+            
+        return jsonify({
+            'success': True,
+            'class': prediction['class'],
+            'confidence': prediction['confidence'],
+            'message': 'Prediction successful'
+        })
             
     except Exception as e:
         return jsonify({
