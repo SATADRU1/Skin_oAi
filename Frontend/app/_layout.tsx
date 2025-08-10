@@ -26,13 +26,13 @@ export default function RootLayout() {
 
   useEffect(() => {
     if (fontsLoaded || fontError) {
-      SplashScreen.hideAsync();
+      // Add a small delay to ensure the splash screen is properly hidden
+      const timer = setTimeout(() => {
+        SplashScreen.hideAsync();
+      }, 100);
+      return () => clearTimeout(timer);
     }
   }, [fontsLoaded, fontError]);
-
-  if (!fontsLoaded && !fontError) {
-    return null;
-  }
 
   // Don't render anything until fonts are loaded
   if (!fontsLoaded && !fontError) {
@@ -40,7 +40,7 @@ export default function RootLayout() {
   }
 
   return (
-    <ThemeProvider>
+    <ThemeProvider> {/* Wrap the entire app with ThemeProvider */}
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="splash" />
         <Stack.Screen name="(tabs)" />
