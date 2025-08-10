@@ -37,12 +37,19 @@ function AppContent() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
+        // Clear auth token for testing - remove this in production
+        await AsyncStorage.removeItem('authToken');
+        console.log('Auth token cleared for testing');
+        
         const token = await AsyncStorage.getItem('authToken');
+        console.log('Auth check - token:', token);
         setIsAuthenticated(!!token);
+        console.log('Auth check - isAuthenticated:', !!token);
       } catch (error) {
         console.error('Error checking auth status:', error);
       } finally {
         setIsLoading(false);
+        console.log('Auth check - loading finished');
       }
     };
 
@@ -51,12 +58,16 @@ function AppContent() {
 
   const login = async () => {
     try {
+      console.log('AuthContext login function called...');
       // In a real app, you would validate credentials with your backend
       // and receive a token
       await AsyncStorage.setItem('authToken', 'dummy-auth-token');
+      console.log('Auth token saved to storage');
       setIsAuthenticated(true);
+      console.log('Authentication state updated to true');
     } catch (error) {
       console.error('Login error:', error);
+      throw error; // Re-throw to handle in the login component
     }
   };
 
@@ -76,15 +87,12 @@ function AppContent() {
   return (
     <AuthContext.Provider value={{ isAuthenticated, login, logout }}>
       <Stack screenOptions={{ headerShown: false }}>
-        {!isAuthenticated ? (
-          <Stack.Screen name="login" />
-        ) : (
-          <>
-            <Stack.Screen name="(tabs)" />
-            <Stack.Screen name="scan" />
-            <Stack.Screen name="result" />
-          </>
-        )}
+        <Stack.Screen name="index" />
+        <Stack.Screen name="login" />
+        <Stack.Screen name="signup" />
+        <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="scan" />
+        <Stack.Screen name="result" />
         <Stack.Screen name="splash" />
         <Stack.Screen name="+not-found" />
       </Stack>

@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, SafeAreaView, KeyboardAvoidingView, Platform, ScrollView, Keyboard, Alert } from 'react-native';
-import { Mail, Lock, Eye, EyeOff, Smartphone } from 'lucide-react-native';
+import { Mail, Lock, Eye, EyeOff, Smartphone, User, ArrowLeft } from 'lucide-react-native';
 import { scaleFont } from '@/utils/responsive';
-import { AuthContext } from './_layout';
 import { router } from 'expo-router';
-import { validateDemoCredentials, DEMO_CREDENTIALS } from '@/utils/demoCredentials';
 
 // Color Palette
 const COLORS = {
@@ -20,14 +18,16 @@ const COLORS = {
   success: '#10B981',   // Emerald-500
 };
 
-export default function LoginScreen() {
+export default function SignupScreen() {
+  const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [keyboardVisible, setKeyboardVisible] = useState(false);
   const [errors, setErrors] = useState<{[key: string]: string}>({});
-  const { login } = React.useContext(AuthContext);
 
   useEffect(() => {
     const keyboardDidShowListener = Keyboard.addListener(
@@ -48,6 +48,10 @@ export default function LoginScreen() {
   const validateForm = () => {
     const newErrors: {[key: string]: string} = {};
 
+    if (!fullName.trim()) {
+      newErrors.fullName = 'Full name is required';
+    }
+
     if (!email.trim()) {
       newErrors.email = 'Email is required';
     } else if (!/\S+@\S+\.\S+/.test(email)) {
@@ -60,11 +64,17 @@ export default function LoginScreen() {
       newErrors.password = 'Password must be at least 6 characters';
     }
 
+    if (!confirmPassword) {
+      newErrors.confirmPassword = 'Please confirm your password';
+    } else if (password !== confirmPassword) {
+      newErrors.confirmPassword = 'Passwords do not match';
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleLogin = async () => {
+  const handleSignup = async () => {
     if (!validateForm()) {
       return;
     }
@@ -72,42 +82,39 @@ export default function LoginScreen() {
     try {
       setIsLoading(true);
       
-      // Simulate API call for login validation
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Simulate API call for signup
+      await new Promise(resolve => setTimeout(resolve, 2000));
       
-      // Validate against demo credentials
-      const user = validateDemoCredentials(email, password);
-      
-      if (user) {
-        console.log('User validated, logging in...');
-        // Call the login function from AuthContext
-        await login();
-        console.log('Login successful, should navigate now...');
-        
-        // Show success message and navigate
-        Alert.alert('Success!', `Welcome back, ${user.name}!`, [
-          { 
+      console.log('Signup successful, navigating to login...');
+      // Show success message
+      Alert.alert(
+        'Success!',
+        'Account created successfully. Please sign in.',
+        [
+          {
             text: 'OK',
             onPress: () => {
-              console.log('Manually navigating to tabs...');
-              router.replace('/(tabs)');
+              console.log('Navigating to login page...');
+              router.replace('/login');
             }
           }
-        ]);
-      } else {
-        Alert.alert('Invalid Credentials', 'Please check your email and password.\n\nDemo credentials:\n• demo@skinoai.com / demo123\n• test@skinoai.com / test123');
-      }
+        ]
+      );
       
     } catch (error) {
-      console.error('Login failed:', error);
-      Alert.alert('Error', 'Login failed. Please try again.');
+      console.error('Signup failed:', error);
+      Alert.alert('Error', 'Failed to create account. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const goToSignup = () => {
-    router.navigate('/signup' as any);
+  const goBack = () => {
+    router.back();
+  };
+
+  const goToLogin = () => {
+    router.navigate('/login' as any);
   };
 
   return (
@@ -123,17 +130,44 @@ export default function LoginScreen() {
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
           >
+            {/* Header with back button */}
+            <View style={styles.headerContainer}>
+              <TouchableOpacity style={styles.backButton} onPress={goBack}>
+                <ArrowLeft size={24} color={COLORS.textPrimary} />
+              </TouchableOpacity>
+            </View>
+
             <View style={[styles.header, keyboardVisible && styles.headerSmall]}>
               <View style={styles.logoContainer}>
                 <View style={styles.logo}>
                   <Smartphone size={scaleFont(28)} color={COLORS.primary} />
                 </View>
               </View>
-              <Text style={styles.title}>Welcome to SkinOAI</Text>
-              <Text style={styles.subtitle}>Sign in to continue</Text>
+              <Text style={styles.title}>Create Account</Text>
+              <Text style={styles.subtitle}>Join SkinOAI today</Text>
             </View>
 
             <View style={styles.form}>
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>Full Name</Text>
+                <TextInput
+                  style={[styles.input, errors.fullName && styles.inputError]}
+                  placeholder="Enter your full name"
+                  placeholderTextColor={COLORS.textSecondary}
+                  value={fullName}
+                  onChangeText={(text) => {
+                    setFullName(text);
+                    if (errors.fullName) setErrors({...errors, fullName: ''});
+                  }}
+                  autoCapitalize="words"
+                  autoCorrect={false}
+                  returnKeyType="next"
+                  blurOnSubmit={false}
+                  selectionColor={COLORS.primary}
+                />
+                {errors.fullName && <Text style={styles.errorText}>{errors.fullName}</Text>}
+              </View>
+
               <View style={styles.inputContainer}>
                 <Text style={styles.label}>Email Address</Text>
                 <TextInput
@@ -160,7 +194,7 @@ export default function LoginScreen() {
                 <View style={styles.passwordContainer}>
                   <TextInput
                     style={[styles.input, errors.password && styles.inputError]}
-                    placeholder="Enter your password"
+                    placeholder="Create a password"
                     placeholderTextColor={COLORS.textSecondary}
                     secureTextEntry={!showPassword}
                     value={password}
@@ -168,8 +202,8 @@ export default function LoginScreen() {
                       setPassword(text);
                       if (errors.password) setErrors({...errors, password: ''});
                     }}
-                    returnKeyType="done"
-                    onSubmitEditing={handleLogin}
+                    returnKeyType="next"
+                    blurOnSubmit={false}
                     selectionColor={COLORS.primary}
                   />
                   <TouchableOpacity 
@@ -185,34 +219,63 @@ export default function LoginScreen() {
                   </TouchableOpacity>
                 </View>
                 {errors.password && <Text style={styles.errorText}>{errors.password}</Text>}
-                <TouchableOpacity style={styles.forgotPassword}>
-                  <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
-                </TouchableOpacity>
+              </View>
+
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>Confirm Password</Text>
+                <View style={styles.passwordContainer}>
+                  <TextInput
+                    style={[styles.input, errors.confirmPassword && styles.inputError]}
+                    placeholder="Confirm your password"
+                    placeholderTextColor={COLORS.textSecondary}
+                    secureTextEntry={!showConfirmPassword}
+                    value={confirmPassword}
+                    onChangeText={(text) => {
+                      setConfirmPassword(text);
+                      if (errors.confirmPassword) setErrors({...errors, confirmPassword: ''});
+                    }}
+                    returnKeyType="done"
+                    onSubmitEditing={handleSignup}
+                    selectionColor={COLORS.primary}
+                  />
+                  <TouchableOpacity 
+                    style={styles.eyeIcon}
+                    onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                    hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
+                  >
+                    {showConfirmPassword ? (
+                      <EyeOff size={scaleFont(20)} color={COLORS.textSecondary} />
+                    ) : (
+                      <Eye size={scaleFont(20)} color={COLORS.textSecondary} />
+                    )}
+                  </TouchableOpacity>
+                </View>
+                {errors.confirmPassword && <Text style={styles.errorText}>{errors.confirmPassword}</Text>}
               </View>
 
               <TouchableOpacity 
                 style={[styles.button, isLoading && styles.buttonDisabled]}
-                onPress={handleLogin}
+                onPress={handleSignup}
                 disabled={isLoading}
                 activeOpacity={0.9}
               >
                 <Text style={styles.buttonText}>
-                  {isLoading ? 'Signing In...' : 'Sign In'}
+                  {isLoading ? 'Creating Account...' : 'Create Account'}
                 </Text>
               </TouchableOpacity>
 
               {/* Demo Info */}
               <View style={styles.demoInfo}>
                 <Text style={styles.demoInfoText}>
-                  💡 Demo credentials: demo@skinoai.com / demo123
+                  💡 This is a demo app. You can use any valid email and password to create an account.
                 </Text>
               </View>
 
               {!keyboardVisible && (
                 <View style={styles.footer}>
-                  <Text style={styles.footerText}>Don't have an account? </Text>
-                  <TouchableOpacity onPress={goToSignup}>
-                    <Text style={styles.signUpText}>Sign Up</Text>
+                  <Text style={styles.footerText}>Already have an account? </Text>
+                  <TouchableOpacity onPress={goToLogin}>
+                    <Text style={styles.signInText}>Sign In</Text>
                   </TouchableOpacity>
                 </View>
               )}
@@ -242,9 +305,29 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     justifyContent: 'center',
   },
+  headerContainer: {
+    position: 'absolute',
+    top: 20,
+    left: 24,
+    zIndex: 1,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: COLORS.surface,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
   header: {
     marginBottom: 32,
     alignItems: 'center',
+    marginTop: 40,
   },
   headerSmall: {
     marginBottom: 24,
@@ -328,15 +411,6 @@ const styles = StyleSheet.create({
     right: 16,
     top: 16,
   },
-  forgotPassword: {
-    alignSelf: 'flex-end',
-    marginTop: 8,
-  },
-  forgotPasswordText: {
-    color: COLORS.primary,
-    fontSize: 14,
-    fontFamily: 'Inter-Medium',
-  },
   button: {
     backgroundColor: COLORS.primary,
     borderRadius: 12,
@@ -362,7 +436,7 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter-Regular',
     fontSize: 14,
   },
-  signUpText: {
+  signInText: {
     color: COLORS.primary,
     fontFamily: 'Inter-SemiBold',
     fontSize: 14,
@@ -371,13 +445,16 @@ const styles = StyleSheet.create({
   demoInfo: {
     marginTop: 20,
     padding: 12,
-    backgroundColor: '#F0F9EB', // Light green background
-    borderRadius: 8,
-    alignItems: 'center',
+    backgroundColor: COLORS.surface,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: COLORS.inputBorder,
+    alignSelf: 'center',
   },
   demoInfoText: {
-    color: '#22C55E', // Green text
-    fontSize: 13,
-    fontFamily: 'Inter-Medium',
+    fontSize: 12,
+    color: COLORS.textSecondary,
+    fontFamily: 'Inter-Regular',
+    textAlign: 'center',
   },
 });
