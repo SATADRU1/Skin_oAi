@@ -9,6 +9,8 @@ import {
   Shield,
   Smartphone,
   Sun,
+  User,
+  LogOut,
 } from "lucide-react-native";
 import { useState } from "react";
 import {
@@ -16,18 +18,22 @@ import {
   ScrollView,
   StyleSheet,
   Switch,
-  // Removed Text and View as they will be replaced by ThemedText and ThemedView
   TouchableOpacity,
 } from "react-native";
-// Removed SafeAreaView as it will be replaced by ThemedView
 import { useTheme } from '@/hooks/useTheme';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import { scaleFont, responsive, getSafeAreaInsets } from '@/utils/responsive';
+import { AuthContext } from '@/app/_layout';
+import { useContext } from 'react';
+
+const safeArea = getSafeAreaInsets();
 
 export default function SettingsScreen() {
   // Removed local darkMode state, now using global theme
   // const [darkMode, setDarkMode] = useState(false);
-  const { theme, toggleTheme } = useTheme(); // Use the global theme hook
+  const { theme, toggleTheme } = useTheme();
+  const { logout } = useContext(AuthContext);
   const [notifications, setNotifications] = useState(true);
   const [dataSharing, setDataSharing] = useState(false);
 
@@ -204,43 +210,41 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    // backgroundColor will be handled by ThemedView
+    paddingTop: safeArea.top,
+    paddingBottom: safeArea.bottom,
   },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingHorizontal: 20,
-    paddingVertical: 20,
-    // backgroundColor will be handled by ThemedView (inherits from container)
+    paddingHorizontal: responsive.wp(5),
+    paddingVertical: responsive.hp(2.5),
   },
   title: {
-    fontSize: 28,
+    fontSize: scaleFont(28),
     fontFamily: "Inter-Bold",
-    // color will be handled by ThemedText
   },
   versionBadge: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#f0f9ff", // Keeping this hardcoded as it's a specific accent
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    backgroundColor: "#f0f9ff",
+    paddingHorizontal: responsive.wp(3),
+    paddingVertical: responsive.hp(0.8),
     borderRadius: 16,
     borderWidth: 1,
     borderColor: "#e0f2fe",
   },
   versionText: {
-    fontSize: 12,
+    fontSize: scaleFont(12),
     fontFamily: "Inter-Medium",
-    color: "#0369a1", // Keeping this hardcoded as it's a specific accent
+    color: "#0369a1",
     marginLeft: 4,
   },
   content: {
-    paddingHorizontal: 20,
+    paddingHorizontal: responsive.wp(5),
   },
   section: {
-    marginBottom: 32,
-    // backgroundColor will be handled by ThemedView
+    marginBottom: responsive.hp(4),
     borderRadius: 12,
     shadowColor: "#000000",
     shadowOffset: { width: 0, height: 1 },
@@ -249,20 +253,21 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   sectionTitle: {
-    fontSize: 16,
+    fontSize: scaleFont(16),
     fontFamily: "Inter-SemiBold",
-    // color will be handled by ThemedText
-    marginBottom: 12,
+    marginBottom: responsive.hp(1.5),
     textTransform: "uppercase",
     letterSpacing: 0.5,
+    paddingHorizontal: responsive.wp(4),
+    paddingTop: responsive.hp(2),
   },
   settingItem: {
-    // backgroundColor will be handled by ThemedView
     borderRadius: 12,
-    padding: 16,
+    padding: responsive.wp(4),
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 8,
+    marginHorizontal: responsive.wp(4),
+    marginBottom: responsive.hp(1),
     elevation: 2,
     shadowColor: "#000000",
     shadowOffset: { width: 0, height: 1 },
@@ -270,33 +275,30 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
   },
   settingIcon: {
-    width: 40,
-    height: 40,
-    backgroundColor: "#f0f9ff", // Keeping this hardcoded as it's a specific accent
-    borderRadius: 20,
+    width: responsive.wp(10),
+    height: responsive.wp(10),
+    backgroundColor: "#f0f9ff",
+    borderRadius: responsive.wp(5),
     justifyContent: "center",
     alignItems: "center",
-    marginRight: 16,
+    marginRight: responsive.wp(4),
   },
   settingContent: {
     flex: 1,
   },
   settingTitle: {
-    fontSize: 16,
+    fontSize: scaleFont(16),
     fontFamily: "Inter-SemiBold",
-    // color will be handled by ThemedText
     marginBottom: 2,
   },
   settingSubtitle: {
-    fontSize: 14,
+    fontSize: scaleFont(14),
     fontFamily: "Inter-Regular",
-    // color will be handled by ThemedText
   },
   appInfo: {
-    // backgroundColor will be handled by ThemedView
     borderRadius: 12,
-    padding: 20,
-    marginBottom: 20,
+    padding: responsive.wp(5),
+    marginBottom: responsive.hp(2.5),
     alignItems: "center",
     elevation: 2,
     shadowColor: "#000000",
@@ -305,24 +307,22 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
   },
   appInfoTitle: {
-    fontSize: 20,
+    fontSize: scaleFont(20),
     fontFamily: "Inter-Bold",
-    // color will be handled by ThemedText
-    marginBottom: 8,
+    marginBottom: responsive.hp(1),
   },
   appInfoSubtitle: {
-    fontSize: 14,
+    fontSize: scaleFont(14),
     fontFamily: "Inter-Regular",
-    // color will be handled by ThemedText
     textAlign: "center",
-    marginBottom: 16,
+    marginBottom: responsive.hp(2),
+    lineHeight: scaleFont(20),
   },
   disclaimer: {
-    fontSize: 12,
+    fontSize: scaleFont(12),
     fontFamily: "Inter-Regular",
-    // color will be handled by ThemedText
     textAlign: "center",
-    lineHeight: 16,
+    lineHeight: scaleFont(16),
     fontStyle: "italic",
   },
 });

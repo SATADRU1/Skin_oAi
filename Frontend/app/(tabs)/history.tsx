@@ -1,8 +1,11 @@
-import { Calendar, Filter, TrendingUp } from "lucide-react-native";
+import { Calendar, Filter, TrendingUp, Activity, BarChart3, TrendingDown } from "lucide-react-native";
 import { Image, ScrollView, StyleSheet, TouchableOpacity } from "react-native";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
-import { useTheme } from '@/hooks/useTheme'; // Import useTheme hook
+import { useTheme } from '@/hooks/useTheme';
+import { scaleFont, responsive, getSafeAreaInsets } from '@/utils/responsive';
+
+const safeArea = getSafeAreaInsets();
 
 export default function HistoryScreen() {
   const { theme } = useTheme(); // Use the global theme hook
@@ -192,70 +195,76 @@ export default function HistoryScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
+  container: { 
+    flex: 1,
+    paddingTop: safeArea.top,
+    paddingBottom: safeArea.bottom,
+  },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingHorizontal: 20,
-    paddingVertical: 20,
+    paddingHorizontal: responsive.wp(5),
+    paddingVertical: responsive.hp(2.5),
   },
   title: {
-    fontSize: 28,
+    fontSize: scaleFont(28),
     fontFamily: "Inter-Bold",
   },
   headerActions: { flexDirection: "row" },
   actionButton: {
-    borderRadius: 20,
-    width: 40,
-    height: 40,
+    borderRadius: responsive.wp(5),
+    width: responsive.wp(10),
+    height: responsive.wp(10),
     justifyContent: "center",
     alignItems: "center",
-    marginLeft: 8,
-    // Moved shadow properties from cardStyle
+    marginLeft: responsive.wp(2),
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.15, // Default for light mode
+    shadowOpacity: 0.15,
     shadowRadius: 3,
     elevation: 2,
   },
   summaryContainer: {
     flexDirection: "row",
-    paddingHorizontal: 20,
-    marginBottom: 24,
+    paddingHorizontal: responsive.wp(5),
+    marginBottom: responsive.hp(3),
   },
   summaryCard: {
     borderRadius: 12,
-    padding: 16,
+    padding: responsive.wp(4),
     flexDirection: "row",
     alignItems: "center",
     flex: 1,
-    marginHorizontal: 4,
-    // Moved shadow properties from cardStyle
+    marginHorizontal: responsive.wp(1),
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.15, // Default for light mode
+    shadowOpacity: 0.15,
     shadowRadius: 3,
     elevation: 2,
   },
-  summaryInfo: { marginLeft: 12 },
-  summaryValue: { fontSize: 20, fontFamily: "Inter-Bold" },
-  summaryLabel: { fontSize: 12, fontFamily: "Inter-Regular", marginTop: 2 },
-  healthIndicator: { width: 24, height: 24, borderRadius: 12 },
-  scanList: { paddingHorizontal: 20 },
+  summaryInfo: { marginLeft: responsive.wp(3) },
+  summaryValue: { fontSize: scaleFont(20), fontFamily: "Inter-Bold" },
+  summaryLabel: { fontSize: scaleFont(12), fontFamily: "Inter-Regular", marginTop: 2 },
+  healthIndicator: { width: responsive.wp(6), height: responsive.wp(6), borderRadius: responsive.wp(3) },
+  scanList: { paddingHorizontal: responsive.wp(5) },
   scanCard: {
     borderRadius: 12,
-    padding: 16,
+    padding: responsive.wp(4),
     flexDirection: "row",
-    marginBottom: 12,
-    // Moved shadow properties from cardStyle
+    marginBottom: responsive.hp(1.5),
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.15, // Default for light mode
+    shadowOpacity: 0.15,
     shadowRadius: 3,
     elevation: 2,
   },
-  scanImage: { width: 60, height: 60, borderRadius: 8, marginRight: 16 },
+  scanImage: { 
+    width: responsive.wp(15), 
+    height: responsive.wp(15), 
+    borderRadius: 8, 
+    marginRight: responsive.wp(4) 
+  },
   scanDetails: { flex: 1 },
   scanHeader: {
     flexDirection: "row",
@@ -263,17 +272,17 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
     marginBottom: 8,
   },
-  scanCondition: { fontSize: 16, fontFamily: "Inter-SemiBold", flex: 1 },
+  scanCondition: { fontSize: scaleFont(16), fontFamily: "Inter-SemiBold", flex: 1 },
   confidenceBadge: {
     backgroundColor: "#f0f9ff",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingHorizontal: responsive.wp(2),
+    paddingVertical: responsive.hp(0.5),
     borderRadius: 6,
     borderWidth: 1,
     borderColor: "#e0f2fe",
   },
   confidenceText: {
-    fontSize: 12,
+    fontSize: scaleFont(12),
     fontFamily: "Inter-Medium",
     color: "#0369a1",
   },
@@ -282,14 +291,14 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
   },
-  scanDate: { fontSize: 14, fontFamily: "Inter-Regular" },
+  scanDate: { fontSize: scaleFont(14), fontFamily: "Inter-Regular" },
   severityBadge: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingHorizontal: responsive.wp(2),
+    paddingVertical: responsive.hp(0.5),
     borderRadius: 6,
   },
   severityDot: { width: 6, height: 6, borderRadius: 3, marginRight: 4 },
-  severityText: { fontSize: 12, fontFamily: "Inter-Medium" },
+  severityText: { fontSize: scaleFont(12), fontFamily: "Inter-Medium" },
 });

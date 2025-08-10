@@ -1,5 +1,8 @@
 import { Tabs } from "expo-router";
 import { FileText, Chrome as Home, Settings } from "lucide-react-native";
+import { responsive, getBottomSpace } from '@/utils/responsive';
+
+const bottomSpace = getBottomSpace();
 
 export default function TabLayout() {
   return (
@@ -12,17 +15,16 @@ export default function TabLayout() {
           backgroundColor: "#ffffff",
           borderTopWidth: 1,
           borderTopColor: "#f3f4f6",
-          paddingTop: 8,
-          paddingBottom: 8,
-          height: 60,
+          paddingTop: responsive.hp(1),
+          paddingBottom: responsive.hp(1) + bottomSpace,
+          height: responsive.hp(8) + bottomSpace,
         },
         tabBarLabelStyle: {
           fontFamily: "Inter-Medium",
-          fontSize: 12,
+          fontSize: responsive.fs(12),
           marginTop: 4,
         },
-      }}
-    >
+      }}>
       <Tabs.Screen
         name="index"
         options={{

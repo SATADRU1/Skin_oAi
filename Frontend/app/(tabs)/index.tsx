@@ -9,18 +9,18 @@ import {
   TrendingUp,
 } from "lucide-react-native";
 import {
-  Dimensions,
   Image,
   ScrollView,
   StyleSheet,
-  // Removed Text and View as they will be replaced by ThemedText and ThemedView
   TouchableOpacity,
+  SafeAreaView,
+  StatusBar,
 } from "react-native";
-// Removed SafeAreaView as it will be replaced by ThemedView
-import { ThemedText } from '@/components/ThemedText'; // Import ThemedText
-import { ThemedView } from '@/components/ThemedView'; // Import ThemedView
+import { ThemedText } from '@/components/ThemedText';
+import { ThemedView } from '@/components/ThemedView';
+import { scaleFont, responsive, getSafeAreaInsets } from '@/utils/responsive';
 
-const { width } = Dimensions.get("window");
+const safeArea = getSafeAreaInsets();
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -168,38 +168,38 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    // backgroundColor will be handled by ThemedView
+    paddingTop: safeArea.top,
+    paddingBottom: safeArea.bottom,
   },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingHorizontal: 20,
-    paddingVertical: 20,
+    paddingHorizontal: responsive.wp(5),
+    paddingVertical: responsive.hp(2.5),
   },
   greeting: {
-    fontSize: 24,
+    fontSize: scaleFont(24),
     fontFamily: "Inter-Bold",
-    // color will be handled by ThemedText
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: scaleFont(16),
     fontFamily: "Inter-Regular",
-    // color will be handled by ThemedText
+    marginTop: 2,
   },
   profileIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: "#e0f2fe", // Specific accent color, can remain hardcoded
+    width: responsive.wp(12),
+    height: responsive.wp(12),
+    borderRadius: responsive.wp(6),
+    backgroundColor: "#e0f2fe",
     justifyContent: "center",
     alignItems: "center",
   },
   scanButtonContainer: {
-    marginHorizontal: 20,
+    marginHorizontal: responsive.wp(5),
     borderRadius: 15,
     overflow: "hidden",
-    marginBottom: 30,
+    marginBottom: responsive.hp(3),
     elevation: 5,
     shadowColor: "#3b82f6",
     shadowOffset: { width: 0, height: 5 },
@@ -209,12 +209,12 @@ const styles = StyleSheet.create({
   scanButton: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 20,
+    padding: responsive.wp(5),
   },
   scanIconContainer: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: responsive.wp(15),
+    height: responsive.wp(15),
+    borderRadius: responsive.wp(7.5),
     backgroundColor: "rgba(255,255,255,0.2)",
     justifyContent: "center",
     alignItems: "center",
@@ -224,23 +224,22 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scanButtonText: {
-    fontSize: 22,
+    fontSize: scaleFont(22),
     fontFamily: "Inter-SemiBold",
-    color: "#ffffff", // This text should remain white on the gradient button
+    color: "#ffffff",
   },
   scanButtonSubtitle: {
-    fontSize: 14,
+    fontSize: scaleFont(14),
     fontFamily: "Inter-Regular",
-    color: "rgba(255,255,255,0.8)", // This text should remain white on the gradient button
+    color: "rgba(255,255,255,0.8)",
   },
   statsContainer: {
     flexDirection: "row",
     justifyContent: "space-around",
-    marginHorizontal: 20,
-    marginBottom: 30,
-    // backgroundColor will be handled by ThemedView
+    marginHorizontal: responsive.wp(5),
+    marginBottom: responsive.hp(3),
     borderRadius: 15,
-    paddingVertical: 20,
+    paddingVertical: responsive.hp(2.5),
     elevation: 3,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
@@ -251,48 +250,44 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   statIconWrapper: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    width: responsive.wp(12),
+    height: responsive.wp(12),
+    borderRadius: responsive.wp(6),
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 8,
   },
   statValue: {
-    fontSize: 20,
+    fontSize: scaleFont(20),
     fontFamily: "Inter-Bold",
-    // color will be handled by ThemedText
   },
   statLabel: {
-    fontSize: 14,
+    fontSize: scaleFont(14),
     fontFamily: "Inter-Regular",
-    // color will be handled by ThemedText
   },
   recentScansHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginHorizontal: 20,
-    marginBottom: 15,
+    marginHorizontal: responsive.wp(5),
+    marginBottom: responsive.hp(2),
   },
   sectionTitle: {
-    fontSize: 20,
+    fontSize: scaleFont(20),
     fontFamily: "Inter-SemiBold",
-    // color will be handled by ThemedText
   },
   viewAllText: {
-    fontSize: 14,
+    fontSize: scaleFont(14),
     fontFamily: "Inter-Medium",
-    color: "#3b82f6", // Specific accent color, can remain hardcoded
+    color: "#3b82f6",
   },
   recentScansList: {
-    paddingHorizontal: 20,
-    paddingBottom: 20,
+    paddingHorizontal: responsive.wp(5),
+    paddingBottom: responsive.hp(2),
   },
   scanCard: {
-    width: width * 0.45,
-    marginRight: 15,
-    // backgroundColor will be handled by ThemedView
+    width: responsive.wp(40),
+    marginRight: responsive.wp(4),
     borderRadius: 15,
     overflow: "hidden",
     elevation: 3,
@@ -303,16 +298,15 @@ const styles = StyleSheet.create({
   },
   scanImage: {
     width: "100%",
-    height: 120,
+    height: responsive.hp(15),
     resizeMode: "cover",
   },
   scanCardContent: {
-    padding: 12,
+    padding: responsive.wp(3),
   },
   scanCondition: {
-    fontSize: 16,
+    fontSize: scaleFont(16),
     fontFamily: "Inter-SemiBold",
-    // color will be handled by ThemedText
     marginBottom: 5,
   },
   scanDetails: {
@@ -321,15 +315,13 @@ const styles = StyleSheet.create({
     marginBottom: 3,
   },
   scanDate: {
-    fontSize: 12,
+    fontSize: scaleFont(12),
     fontFamily: "Inter-Regular",
-    // color will be handled by ThemedText
     marginLeft: 5,
   },
   scanConfidence: {
-    fontSize: 12,
+    fontSize: scaleFont(12),
     fontFamily: "Inter-Regular",
-    // color will be handled by ThemedText
     marginLeft: 5,
   },
 });

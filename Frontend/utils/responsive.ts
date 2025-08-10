@@ -1,4 +1,5 @@
-import { Dimensions, Platform, PixelRatio, ScaledSize } from 'react-native';
+import { Dimensions, Platform, PixelRatio, ScaledSize, StatusBar } from 'react-native';
+import Constants from 'expo-constants';
 
 // Base dimensions based on standard 5" screen mobile
 const BASE_WIDTH = 375;
@@ -64,6 +65,29 @@ const isTablet = () => {
   );
 };
 
+// Safe Area utilities
+const getStatusBarHeight = () => {
+  if (Platform.OS === 'ios') {
+    return Constants.statusBarHeight || 44;
+  }
+  return StatusBar.currentHeight || 24;
+};
+
+const getBottomSpace = () => {
+  // For devices with home indicator (iPhone X+)
+  if (Platform.OS === 'ios' && SCREEN_HEIGHT >= 812) {
+    return 34;
+  }
+  return 0;
+};
+
+const getSafeAreaInsets = () => ({
+  top: getStatusBarHeight(),
+  bottom: getBottomSpace(),
+  left: 0,
+  right: 0,
+});
+
 // Responsive padding/margin
 const responsive = {
   // Scale by width (good for horizontal spacing)
@@ -108,4 +132,7 @@ export {
   responsive,
   SCREEN_WIDTH,
   SCREEN_HEIGHT,
+  getStatusBarHeight,
+  getBottomSpace,
+  getSafeAreaInsets,
 };
