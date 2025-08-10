@@ -2,13 +2,17 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { predictSkinCondition, Recommendations } from '@/utils/api';
+import { useScanData } from '@/contexts/ScanContext';
+import { formatDateTime } from '@/utils/scanUtils';
 
 export default function ResultScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
+  const { addScan } = useScanData();
 
-  // Expecting params.image (base64 string) and params.text (string)
+  // Expecting params.image (base64 string) and params.imageUri (uri string)
   const imageBase64 = params.image as string | undefined;
+  const imageUri = params.imageUri as string | undefined;
   const textInfo = params.text as string | undefined;
 
   const [result, setResult] = useState<any>(null);
@@ -30,12 +34,46 @@ export default function ResultScreen() {
       try {
         const predictionResult = await predictSkinCondition(imageBase64);
         
-        setResult({ 
+        const analysisResult = { 
           ...predictionResult, 
           image: `data:image/jpeg;base64,${imageBase64}`,
           predicted_class: predictionResult.class,
           confidence: Math.round(predictionResult.confidence * 100)
-        });
+        };
+        
+        setResult(analysisResult);
+        
+        // Save successful prediction to scan context
+        try {
+          const now = new Date();
+          const { date, time } = formatDateTime(now);
+          
+          // Map severity based on urgency or set default
+          let severity: 'None' | 'Mild' | 'Moderate' | 'Severe' = 'Mild';
+          if (predictionResult.recommendations?.medical_advice?.urgency) {
+            switch (predictionResult.recommendations.medical_advice.urgency.toLowerCase()) {
+              case 'low': severity = 'None'; break;
+              case 'medium': severity = 'Moderate'; break;
+              case 'high': severity = 'Severe'; break;
+              default: severity = 'Mild';
+            }
+          }
+          
+          await addScan({
+            label: predictionResult.class || 'Unknown Condition',
+            accuracy: analysisResult.confidence,
+            severity,
+            date,
+            time,
+            imageUri: imageUri || `data:image/jpeg;base64,${imageBase64}`,
+          });
+          
+          console.log('Scan result saved to context successfully');
+        } catch (saveError) {
+          console.warn('Failed to save scan to context:', saveError);
+          // Don't fail the whole process if saving fails
+        }
+        
         setLoading(false);
       } catch (error: any) {
         setError(error.message || 'Failed to analyze image');

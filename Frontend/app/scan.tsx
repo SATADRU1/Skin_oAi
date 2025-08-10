@@ -33,12 +33,15 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { scaleFont, responsive, getSafeAreaInsets } from '@/utils/responsive';
 import { COLORS, TYPOGRAPHY, SPACING, RADIUS, SHADOWS, ANIMATIONS } from '@/constants/DesignSystem';
+import { useScanData } from '@/contexts/ScanContext';
+import { generateMockScan, formatDateTime } from '@/utils/scanUtils';
 
 const { width, height } = Dimensions.get("window");
 const safeArea = getSafeAreaInsets();
 
 export default function ScanScreen() {
   const router = useRouter();
+  const { addScan } = useScanData();
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisStep, setAnalysisStep] = useState<
     "preparing" | "analyzing" | "finalizing"
@@ -63,7 +66,7 @@ export default function ScanScreen() {
       Animated.timing(slideAnim, {
         toValue: 0,
         duration: ANIMATIONS.normal,
-        easing: Easing.out(Easing.cubic),
+        easing: Easing.out(Easing.quad),
         useNativeDriver: true,
       }),
       Animated.spring(scaleAnim, {
@@ -80,13 +83,13 @@ export default function ScanScreen() {
         Animated.timing(scanFrameAnim, {
           toValue: 1.05,
           duration: 1500,
-          easing: Easing.inOut(Easing.sin),
+          easing: Easing.inOut(Easing.quad),
           useNativeDriver: true,
         }),
         Animated.timing(scanFrameAnim, {
           toValue: 1,
           duration: 1500,
-          easing: Easing.inOut(Easing.sin),
+          easing: Easing.inOut(Easing.quad),
           useNativeDriver: true,
         })
       ])
@@ -97,13 +100,13 @@ export default function ScanScreen() {
         Animated.timing(pulseAnim, {
           toValue: 1.1,
           duration: 2000,
-          easing: Easing.inOut(Easing.sin),
+          easing: Easing.inOut(Easing.quad),
           useNativeDriver: true,
         }),
         Animated.timing(pulseAnim, {
           toValue: 1,
           duration: 2000,
-          easing: Easing.inOut(Easing.sin),
+          easing: Easing.inOut(Easing.quad),
           useNativeDriver: true,
         })
       ])
@@ -162,15 +165,22 @@ export default function ScanScreen() {
         setAnalysisStep("analyzing");
         setTimeout(() => {
           setAnalysisStep("finalizing");
-          setTimeout(() => {
-            setIsAnalyzing(false);
-            router.push({
-              pathname: "/result",
-              params: {
-                image: result.assets[0].base64,
-                text: "",
-              },
-            });
+          setTimeout(async () => {
+            try {
+              setIsAnalyzing(false);
+              // Navigate to result page with base64 image data for real API analysis
+              router.push({
+                pathname: "/result",
+                params: {
+                  image: result.assets[0].base64, // Pass base64 for API
+                  imageUri: result.assets[0].uri || `data:image/jpeg;base64,${result.assets[0].base64}`, // Pass URI for display
+                },
+              });
+            } catch (error) {
+              console.error('Error processing scan:', error);
+              setIsAnalyzing(false);
+              Alert.alert('Error', 'Failed to process scan.');
+            }
           }, 500);
         }, 1000);
       }, 500);
@@ -225,15 +235,22 @@ export default function ScanScreen() {
         setAnalysisStep("analyzing");
         setTimeout(() => {
           setAnalysisStep("finalizing");
-          setTimeout(() => {
-            setIsAnalyzing(false);
-            router.push({
-              pathname: "/result",
-              params: {
-                image: result.assets[0].base64,
-                text: "",
-              },
-            });
+          setTimeout(async () => {
+            try {
+              setIsAnalyzing(false);
+              // Navigate to result page with base64 image data for real API analysis
+              router.push({
+                pathname: "/result",
+                params: {
+                  image: result.assets[0].base64, // Pass base64 for API
+                  imageUri: result.assets[0].uri, // Pass URI for display
+                },
+              });
+            } catch (error) {
+              console.error('Error processing scan:', error);
+              setIsAnalyzing(false);
+              Alert.alert('Error', 'Failed to process scan.');
+            }
           }, 500);
         }, 1000);
       }, 500);
@@ -374,11 +391,7 @@ export default function ScanScreen() {
 
   return (
     <ThemedView style={styles.container}>
-      <LinearGradient
-        colors={['#000000', '#1a1a2e', '#16213e']}
-        style={styles.backgroundGradient}
-      >
-        {/* Modern Header */}
+        {/* Clean Header */}
         <Animated.View style={[
           styles.header,
           {
@@ -387,18 +400,13 @@ export default function ScanScreen() {
           }
         ]}>
           <TouchableOpacity onPress={() => router.back()} style={styles.backButton} activeOpacity={0.7}>
-            <LinearGradient
-              colors={[COLORS.surface.glass, COLORS.surface.primary]}
-              style={styles.backButtonGradient}
-            >
-              <ArrowLeft size={responsive.wp(6)} color={COLORS.neutral[0]} strokeWidth={2.5} />
-            </LinearGradient>
+            <ArrowLeft size={responsive.wp(6)} color={COLORS.neutral[700]} strokeWidth={2} />
           </TouchableOpacity>
-          <ThemedText style={styles.headerTitle}>📷 AI Skin Scanner</ThemedText>
+          <ThemedText style={styles.headerTitle}>Scan</ThemedText>
           <ThemedView style={styles.headerPlaceholder} />
         </Animated.View>
 
-        {/* Enhanced Camera Preview */}
+        {/* Clean Camera Preview */}
         <Animated.View style={[
           styles.cameraContainer,
           {
@@ -406,24 +414,21 @@ export default function ScanScreen() {
             transform: [{ scale: scaleAnim }]
           }
         ]}>
-          <LinearGradient
-            colors={[COLORS.neutral[800], COLORS.neutral[700]]}
-            style={styles.cameraPlaceholder}
-          >
+          <ThemedView style={styles.cameraPlaceholder}>
             <Animated.View style={[
               styles.cameraIconContainer,
               {
                 transform: [{ scale: pulseAnim }]
               }
             ]}>
-              <Scan size={responsive.wp(16)} color={COLORS.primary[400]} strokeWidth={1.5} />
+              <Scan size={responsive.wp(12)} color={COLORS.neutral[400]} strokeWidth={1.5} />
             </Animated.View>
             <ThemedText style={styles.cameraPlaceholderText}>
-              Camera will appear here
+              Position skin area in frame
             </ThemedText>
-          </LinearGradient>
+          </ThemedView>
           
-          {/* Enhanced Overlay */}
+          {/* Clean Overlay */}
           <ThemedView style={styles.overlay}>
             <Animated.View style={[
               styles.scanFrame,
@@ -437,46 +442,11 @@ export default function ScanScreen() {
               <ThemedView style={[styles.corner, styles.bottomLeft]} />
               <ThemedView style={[styles.corner, styles.bottomRight]} />
             </ThemedView>
-            <ThemedText style={styles.overlayText}>
-              🎯 Position the affected area within the frame
-            </ThemedText>
-            <ThemedText style={styles.overlaySubtext}>
-              AI will analyze your skin condition
-            </ThemedText>
           </ThemedView>
         </Animated.View>
 
-        {/* Enhanced Instructions */}
-        <Animated.View style={[
-          styles.instructionsContainer,
-          {
-            opacity: fadeAnim,
-            transform: [{ translateY: slideAnim }]
-          }
-        ]}>
-          <ThemedView style={styles.instructionCard}>
-            <ThemedView style={styles.instructionItem}>
-              <LinearGradient
-                colors={[COLORS.accent.amber + '30', COLORS.accent.amber + '20']}
-                style={styles.instructionIconContainer}
-              >
-                <Lightbulb size={responsive.wp(4)} color={COLORS.accent.amber} />
-              </LinearGradient>
-              <ThemedText style={styles.instructionText}>Ensure good lighting and clear focus</ThemedText>
-            </ThemedView>
-            <ThemedView style={styles.instructionItem}>
-              <LinearGradient
-                colors={[COLORS.secondary[500] + '30', COLORS.secondary[500] + '20']}
-                style={styles.instructionIconContainer}
-              >
-                <Eye size={responsive.wp(4)} color={COLORS.secondary[500]} />
-              </LinearGradient>
-              <ThemedText style={styles.instructionText}>Keep the camera steady for best results</ThemedText>
-            </ThemedView>
-          </ThemedView>
-        </Animated.View>
 
-        {/* Enhanced Controls */}
+        {/* Simple Controls */}
         <Animated.View style={[
           styles.controls,
           {
@@ -489,12 +459,9 @@ export default function ScanScreen() {
             onPress={handleUploadPhoto}
             activeOpacity={0.8}
           >
-            <LinearGradient
-              colors={[COLORS.accent.cyan + '30', COLORS.accent.cyan + '20']}
-              style={styles.uploadIconContainer}
-            >
-              <ImageIcon size={responsive.wp(6)} color={COLORS.accent.cyan} strokeWidth={2} />
-            </LinearGradient>
+            <ThemedView style={styles.uploadIconContainer}>
+              <ImageIcon size={responsive.wp(6)} color={COLORS.primary[500]} strokeWidth={2} />
+            </ThemedView>
             <ThemedText style={styles.uploadText}>Upload</ThemedText>
           </TouchableOpacity>
 
@@ -506,14 +473,9 @@ export default function ScanScreen() {
               onPress={handleTakePhoto}
               activeOpacity={0.9}
             >
-              <LinearGradient
-                colors={COLORS.gradients.primary}
-                style={styles.captureGradient}
-              >
-                <ThemedView style={styles.captureInner}>
-                  <CameraIcon size={responsive.wp(8)} color={COLORS.neutral[0]} strokeWidth={2.5} />
-                </ThemedView>
-              </LinearGradient>
+              <ThemedView style={styles.captureButtonInner}>
+                <CameraIcon size={responsive.wp(8)} color={COLORS.neutral[0]} strokeWidth={2.5} />
+              </ThemedView>
             </TouchableOpacity>
           </Animated.View>
 
@@ -521,16 +483,12 @@ export default function ScanScreen() {
             style={styles.uploadButton}
             activeOpacity={0.8}
           >
-            <LinearGradient
-              colors={[COLORS.accent.emerald + '30', COLORS.accent.emerald + '20']}
-              style={styles.uploadIconContainer}
-            >
-              <Shield size={responsive.wp(6)} color={COLORS.accent.emerald} strokeWidth={2} />
-            </LinearGradient>
-            <ThemedText style={styles.uploadText}>Guide</ThemedText>
+            <ThemedView style={styles.uploadIconContainer}>
+              <Info size={responsive.wp(6)} color={COLORS.primary[500]} strokeWidth={2} />
+            </ThemedView>
+            <ThemedText style={styles.uploadText}>Tips</ThemedText>
           </TouchableOpacity>
         </Animated.View>
-      </LinearGradient>
     </ThemedView>
   );
 }
@@ -570,7 +528,6 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: TYPOGRAPHY.sizes.xl,
     fontFamily: TYPOGRAPHY.families.bold,
-    color: COLORS.neutral[0],
     textAlign: 'center',
   },
   headerPlaceholder: {
@@ -712,7 +669,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: SPACING['2xl'],
     paddingVertical: SPACING['2xl'],
-    backgroundColor: COLORS.surface.overlay,
   },
   uploadButton: {
     alignItems: "center",
@@ -730,7 +686,6 @@ const styles = StyleSheet.create({
   uploadText: {
     fontSize: TYPOGRAPHY.sizes.sm,
     fontFamily: TYPOGRAPHY.families.semibold,
-    color: COLORS.neutral[0],
   },
   captureButton: {
     borderRadius: RADIUS.full,
@@ -751,6 +706,15 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.surface.glass,
     justifyContent: "center",
     alignItems: "center",
+  },
+  captureButtonInner: {
+    width: responsive.wp(20),
+    height: responsive.wp(20),
+    borderRadius: RADIUS.full,
+    backgroundColor: COLORS.primary[500],
+    justifyContent: "center",
+    alignItems: "center",
+    ...SHADOWS.xl,
   },
 
   // Analyzing State

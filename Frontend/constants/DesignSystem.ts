@@ -71,12 +71,20 @@ export const COLORS = {
     dark: ['#374151', '#1F2937', '#111827'] as const,
   },
 
-  // Card & Surface Colors
+  // Card & Surface Colors (Light mode)
   surface: {
     primary: 'rgba(255, 255, 255, 0.95)',
     secondary: 'rgba(248, 250, 252, 0.9)',
     glass: 'rgba(255, 255, 255, 0.1)',
     overlay: 'rgba(0, 0, 0, 0.3)',
+  },
+  
+  // Dark mode surface colors
+  surfaceDark: {
+    primary: 'rgba(32, 32, 32, 0.95)',
+    secondary: 'rgba(24, 24, 27, 0.9)',
+    glass: 'rgba(255, 255, 255, 0.1)',
+    overlay: 'rgba(0, 0, 0, 0.6)',
   }
 };
 

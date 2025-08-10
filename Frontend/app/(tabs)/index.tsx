@@ -24,11 +24,15 @@ import { ThemedView } from '@/components/ThemedView';
 import { scaleFont, responsive, getSafeAreaInsets } from '@/utils/responsive';
 import { COLORS, TYPOGRAPHY, SPACING, RADIUS, SHADOWS, ANIMATIONS } from '@/constants/DesignSystem';
 import { useEffect, useRef } from 'react';
+import { useScanData } from '@/contexts/ScanContext';
+import { getRecentScans } from '@/utils/scanUtils';
+import { DevHelper } from '@/components/DevHelper';
 
 const safeArea = getSafeAreaInsets();
 
 export default function HomeScreen() {
   const router = useRouter();
+  const { scans, stats, isLoading } = useScanData();
   
   // Animation values
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -81,53 +85,14 @@ export default function HomeScreen() {
     return () => pulseAnimation.stop();
   }, []);
 
-  const recentScans = [
-    {
-      id: "1",
-      date: "2024-01-15",
-      time: "10:30 AM",
-      condition: "Melanoma",
-      confidence: 95,
-      severity: "Mild",
-      image:
-        "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6c/Melanoma.jpg/250px-Melanoma.jpg",
-    },
-    {
-      id: "2",
-      date: "2024-01-10",
-      time: "9:45 AM",
-      condition: "Dry Skin",
-      confidence: 92,
-      severity: "Mild",
-      image:
-        "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTzP5xKoDr8QlvRur1LyqadPnQbLi_Ito1MXQ&s",
-    },
-    {
-      id: "3",
-      date: "2024-01-08",
-      time: "4:20 PM",
-      condition: "Normal Skin",
-      confidence: 96,
-      severity: "None",
-      image:
-        "https://prequelskin.com/cdn/shop/articles/PRQL_Blog_Hero_NormalSkin.jpg?v=1690383094",
-    },
-    {
-      id: "4",
-      date: "2024-01-05",
-      time: "11:10 AM",
-      condition: "Skin Rashes",
-      confidence: 89,
-      severity: "Mild",
-      image:
-        "https://images.prismic.io/gohealth/MTA3MDQ0OWEtNDY4My00MjBiLTljY2QtZjQ5YzdhODdkOWQ4_whats-that-rash-poison-ivy.png?auto=compress,format&rect=0,0,974,547&w=974&h=547",
-    },
-  ];
+  // Get recent scans from dynamic data
+  const recentScans = getRecentScans(scans, 4);
 
-  const stats = [
-    { icon: Scan, label: "Total Scans", value: "4", color: COLORS.primary[500], gradient: COLORS.gradients.primary },
-    { icon: TrendingUp, label: "Accuracy", value: "94%", color: COLORS.secondary[500], gradient: COLORS.gradients.secondary },
-    { icon: Activity, label: "Health Score", value: "A+", color: COLORS.accent.purple, gradient: COLORS.gradients.cool },
+  // Dynamic stats from context
+  const statsData = [
+    { icon: Scan, label: "Total Scans", value: stats.totalScans.toString(), color: COLORS.primary[500], gradient: COLORS.gradients.primary },
+    { icon: TrendingUp, label: "Accuracy", value: `${stats.averageAccuracy}%`, color: COLORS.secondary[500], gradient: COLORS.gradients.secondary },
+    { icon: Activity, label: "Health Score", value: stats.healthScore, color: COLORS.accent.purple, gradient: COLORS.gradients.cool },
   ];
 
   return (
@@ -190,18 +155,18 @@ export default function HomeScreen() {
             transform: [{ scale: scaleAnim }]
           }
         ]}>
-          {stats.map((stat, index) => (
-            <TouchableOpacity key={index} style={styles.statCard} activeOpacity={0.7}>
-              <LinearGradient
-                colors={[`${stat.color}15`, `${stat.color}25`]}
-                style={styles.statIconWrapper}
-              >
-                <stat.icon size={responsive.wp(6)} color={stat.color} strokeWidth={2} />
-              </LinearGradient>
-              <ThemedText style={styles.statValue}>{stat.value}</ThemedText>
-              <ThemedText style={styles.statLabel}>{stat.label}</ThemedText>
-            </TouchableOpacity>
-          ))}
+        {statsData.map((stat, index) => (
+          <TouchableOpacity key={index} style={styles.statCard} activeOpacity={0.7}>
+            <LinearGradient
+              colors={[`${stat.color}15`, `${stat.color}25`]}
+              style={styles.statIconWrapper}
+            >
+              <stat.icon size={responsive.wp(6)} color={stat.color} strokeWidth={2} />
+            </LinearGradient>
+            <ThemedText style={styles.statValue}>{stat.value}</ThemedText>
+            <ThemedText style={styles.statLabel}>{stat.label}</ThemedText>
+          </TouchableOpacity>
+        ))}
         </Animated.View>
 
         {/* Recent Scans Section */}
@@ -225,53 +190,61 @@ export default function HomeScreen() {
           </TouchableOpacity>
         </Animated.View>
 
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.recentScansList}
-        >
-          {recentScans.map((scan, index) => (
-            <Animated.View
-              key={scan.id}
-              style={[
-                { opacity: scaleAnim },
-                { transform: [{ translateX: slideAnim }] }
-              ]}
-            >
-              <TouchableOpacity
-                style={styles.scanCard}
-                onPress={() => router.push({ pathname: "/result", params: { image: scan.image, text: scan.condition } })}
-                activeOpacity={0.9}
+        {recentScans.length > 0 ? (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.recentScansList}
+          >
+            {recentScans.map((scan, index) => (
+              <Animated.View
+                key={scan.id}
+                style={[
+                  { opacity: scaleAnim },
+                  { transform: [{ translateX: slideAnim }] }
+                ]}
               >
-                <ThemedView style={styles.scanImageContainer}>
-                  <Image source={{ uri: scan.image }} style={styles.scanImage} />
-                  <LinearGradient
-                    colors={['transparent', 'rgba(0,0,0,0.7)']}
-                    style={styles.scanImageOverlay}
-                  />
-                  <ThemedView style={styles.confidenceBadge}>
-                    <ThemedText style={styles.confidenceText}>{scan.confidence}%</ThemedText>
+                <TouchableOpacity
+                  style={styles.scanCard}
+                  onPress={() => router.push({ pathname: "/result", params: { image: scan.imageUri, text: scan.label } })}
+                  activeOpacity={0.9}
+                >
+                  <ThemedView style={styles.scanImageContainer}>
+                    <Image source={{ uri: scan.imageUri }} style={styles.scanImage} />
+                    <LinearGradient
+                      colors={['transparent', 'rgba(0,0,0,0.7)']}
+                      style={styles.scanImageOverlay}
+                    />
+                    <ThemedView style={styles.confidenceBadge}>
+                      <ThemedText style={styles.confidenceText}>{scan.accuracy}%</ThemedText>
+                    </ThemedView>
                   </ThemedView>
-                </ThemedView>
-                <ThemedView style={styles.scanCardContent}>
-                  <ThemedText style={styles.scanCondition}>{scan.condition}</ThemedText>
-                  <ThemedView style={styles.scanDetails}>
-                    <Clock size={responsive.wp(3)} color={COLORS.neutral[400]} />
-                    <ThemedText style={styles.scanDate}>{scan.date}</ThemedText>
+                  <ThemedView style={styles.scanCardContent}>
+                    <ThemedText style={styles.scanCondition}>{scan.label}</ThemedText>
+                    <ThemedView style={styles.scanDetails}>
+                      <Clock size={responsive.wp(3)} color={COLORS.neutral[400]} />
+                      <ThemedText style={styles.scanDate}>{scan.date}</ThemedText>
+                    </ThemedView>
+                    <ThemedView style={[styles.severityBadge, {
+                      backgroundColor: scan.severity === 'None' ? COLORS.secondary[100] : COLORS.accent.orange + '20'
+                    }]}>
+                      <ThemedText style={[styles.severityText, {
+                        color: scan.severity === 'None' ? COLORS.secondary[600] : COLORS.accent.orange
+                      }]}>{scan.severity}</ThemedText>
+                    </ThemedView>
                   </ThemedView>
-                  <ThemedView style={[styles.severityBadge, {
-                    backgroundColor: scan.severity === 'None' ? COLORS.secondary[100] : COLORS.accent.orange + '20'
-                  }]}>
-                    <ThemedText style={[styles.severityText, {
-                      color: scan.severity === 'None' ? COLORS.secondary[600] : COLORS.accent.orange
-                    }]}>{scan.severity}</ThemedText>
-                  </ThemedView>
-                </ThemedView>
-              </TouchableOpacity>
-            </Animated.View>
-          ))}
-        </ScrollView>
+                </TouchableOpacity>
+              </Animated.View>
+            ))}
+          </ScrollView>
+        ) : (
+          <ThemedView style={styles.emptyState}>
+            <ThemedText style={styles.emptyStateText}>No scans yet</ThemedText>
+            <ThemedText style={styles.emptyStateSubtext}>Start by taking your first skin analysis</ThemedText>
+          </ThemedView>
+        )}
       </ScrollView>
+      <DevHelper />
     </ThemedView>
   );
 }
@@ -495,5 +468,22 @@ const styles = StyleSheet.create({
     fontFamily: TYPOGRAPHY.families.semibold,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
+  },
+  emptyState: {
+    alignItems: 'center',
+    paddingVertical: SPACING['4xl'],
+    paddingHorizontal: SPACING.xl,
+  },
+  emptyStateText: {
+    fontSize: TYPOGRAPHY.sizes.lg,
+    fontFamily: TYPOGRAPHY.families.semibold,
+    color: COLORS.neutral[600],
+    marginBottom: SPACING.sm,
+  },
+  emptyStateSubtext: {
+    fontSize: TYPOGRAPHY.sizes.base,
+    fontFamily: TYPOGRAPHY.families.regular,
+    color: COLORS.neutral[400],
+    textAlign: 'center',
   },
 });

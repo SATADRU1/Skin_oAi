@@ -12,6 +12,7 @@ import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
 import { ThemeProvider } from '@/contexts/ThemeContext';
+import { ScanProvider } from '@/contexts/ScanContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 SplashScreen.preventAutoHideAsync();
@@ -127,8 +128,10 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider>
-      <AppContent />
-      <StatusBar style="light" />
+      <ScanProvider>
+        <AppContent />
+        <StatusBar style="light" />
+      </ScanProvider>
     </ThemeProvider>
   );
 }

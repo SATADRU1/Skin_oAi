@@ -1,5 +1,5 @@
-import { Calendar, Filter, TrendingUp, Activity, BarChart3, TrendingDown, Search, ArrowUpRight, Clock, Shield, ChevronDown } from "lucide-react-native";
-import { Image, ScrollView, StyleSheet, TouchableOpacity, Animated, Easing, FlatList } from "react-native";
+import { Calendar, Filter, TrendingUp, Activity, BarChart3, TrendingDown, Search, ArrowUpRight, Clock, Shield, ChevronDown, Trash2 } from "lucide-react-native";
+import { Image, ScrollView, StyleSheet, TouchableOpacity, Animated, Easing, FlatList, Alert } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
@@ -7,6 +7,8 @@ import { useTheme } from '@/hooks/useTheme';
 import { scaleFont, responsive, getSafeAreaInsets } from '@/utils/responsive';
 import { COLORS, TYPOGRAPHY, SPACING, RADIUS, SHADOWS, ANIMATIONS } from '@/constants/DesignSystem';
 import { useEffect, useRef, useState } from 'react';
+import { useScanData } from '@/contexts/ScanContext';
+import { ScanResult } from '@/types/scan';
 
 const safeArea = getSafeAreaInsets();
 
@@ -14,6 +16,7 @@ export default function HistoryScreen() {
   const { theme } = useTheme();
   const isDark = theme === "dark";
   const [selectedFilter, setSelectedFilter] = useState('All');
+  const { scans, stats, deleteScan, isLoading } = useScanData();
   
   // Animation values
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -42,48 +45,40 @@ export default function HistoryScreen() {
     ]).start();
   }, []);
 
-  const scans = [
-    {
-      id: "1",
-      date: "2024-01-15",
-      time: "10:30 AM",
-      condition: "Melanoma",
-      confidence: 95,
-      severity: "Mild",
-      image:
-        "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6c/Melanoma.jpg/250px-Melanoma.jpg",
-    },
-    {
-      id: "2",
-      date: "2024-01-10",
-      time: "9:45 AM",
-      condition: "Dry Skin",
-      confidence: 92,
-      severity: "Mild",
-      image:
-        "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTzP5xKoDr8QlvRur1LyqadPnQbLi_Ito1MXQ&s",
-    },
-    {
-      id: "3",
-      date: "2024-01-08",
-      time: "4:20 PM",
-      condition: "Normal Skin",
-      confidence: 96,
-      severity: "None",
-      image:
-        "https://prequelskin.com/cdn/shop/articles/PRQL_Blog_Hero_NormalSkin.jpg?v=1690383094",
-    },
-    {
-      id: "4",
-      date: "2024-01-05",
-      time: "11:10 AM",
-      condition: "Skin Rashes",
-      confidence: 89,
-      severity: "Mild",
-      image:
-        "https://images.prismic.io/gohealth/MTA3MDQ0OWEtNDY4My00MjBiLTljY2QtZjQ5YzdhODdkOWQ4_whats-that-rash-poison-ivy.png?auto=compress,format&rect=0,0,974,547&w=974&h=547",
-    },
-  ];
+  // Handle scan deletion
+  const handleDeleteScan = (scanId: string, scanLabel: string) => {
+    Alert.alert(
+      'Delete Scan',
+      `Are you sure you want to delete the ${scanLabel} scan? This action cannot be undone.`,
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await deleteScan(scanId);
+            } catch (error) {
+              Alert.alert('Error', 'Failed to delete scan. Please try again.');
+            }
+          },
+        },
+      ],
+    );
+  };
+
+  // Filter scans based on selected filter
+  const filteredScans = scans.filter(scan => {
+    if (selectedFilter === 'All') return true;
+    if (selectedFilter === 'Healthy') return scan.severity === 'None';
+    return scan.severity === selectedFilter;
+  });
+
+  // Sort scans by creation time (most recent first)
+  const sortedScans = filteredScans.sort((a, b) => b.createdAt - a.createdAt);
 
   const getSeverityColor = (severity: string) => {
     switch (severity) {
@@ -116,10 +111,8 @@ export default function HistoryScreen() {
   };
 
   const filterOptions = ['All', 'Healthy', 'Mild', 'Moderate', 'Severe'];
-  const healthyCount = scans.filter((s) => s.severity === "None").length;
-  const avgConfidence = Math.round(scans.reduce((sum, scan) => sum + scan.confidence, 0) / scans.length);
 
-  const renderScanCard = ({ item: scan, index }: { item: any, index: number }) => (
+  const renderScanCard = ({ item: scan, index }: { item: ScanResult, index: number }) => (
     <Animated.View
       style={[
         {
@@ -137,20 +130,20 @@ export default function HistoryScreen() {
     >
       <TouchableOpacity style={styles.scanCard} activeOpacity={0.9}>
         <ThemedView style={styles.scanImageContainer}>
-          <Image source={{ uri: scan.image }} style={styles.scanImage} />
+          <Image source={{ uri: scan.imageUri }} style={styles.scanImage} />
           <LinearGradient
             colors={['transparent', 'rgba(0,0,0,0.6)']}
             style={styles.scanImageOverlay}
           />
           <ThemedView style={styles.confidenceBadge}>
             <Shield size={responsive.wp(3)} color={COLORS.primary[600]} />
-            <ThemedText style={styles.confidenceText}>{scan.confidence}%</ThemedText>
+            <ThemedText style={styles.confidenceText}>{scan.accuracy}%</ThemedText>
           </ThemedView>
         </ThemedView>
         
         <ThemedView style={styles.scanContent}>
           <ThemedView style={styles.scanHeader}>
-            <ThemedText style={styles.scanCondition}>{scan.condition}</ThemedText>
+            <ThemedText style={styles.scanCondition}>{scan.label}</ThemedText>
             <ThemedView style={[styles.severityBadge, {
               backgroundColor: getSeverityColor(scan.severity) + '20'
             }]}>
@@ -172,7 +165,13 @@ export default function HistoryScreen() {
           </ThemedView>
         </ThemedView>
         
-        <ArrowUpRight size={responsive.wp(5)} color={COLORS.neutral[400]} />
+        <TouchableOpacity 
+          onPress={() => handleDeleteScan(scan.id, scan.label)}
+          style={styles.deleteButton}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
+          <Trash2 size={responsive.wp(5)} color={COLORS.error} strokeWidth={2} />
+        </TouchableOpacity>
       </TouchableOpacity>
     </Animated.View>
   );
@@ -225,7 +224,7 @@ export default function HistoryScreen() {
         >
           <TrendingUp size={responsive.wp(7)} color={COLORS.neutral[0]} strokeWidth={2.5} />
           <ThemedView style={styles.summaryInfo}>
-            <ThemedText style={styles.summaryValue}>{scans.length}</ThemedText>
+            <ThemedText style={styles.summaryValue}>{stats.totalScans}</ThemedText>
             <ThemedText style={styles.summaryLabel}>Total Scans</ThemedText>
           </ThemedView>
         </LinearGradient>
@@ -236,7 +235,7 @@ export default function HistoryScreen() {
         >
           <Activity size={responsive.wp(7)} color={COLORS.neutral[0]} strokeWidth={2.5} />
           <ThemedView style={styles.summaryInfo}>
-            <ThemedText style={styles.summaryValue}>{healthyCount}</ThemedText>
+            <ThemedText style={styles.summaryValue}>{stats.healthyCount}</ThemedText>
             <ThemedText style={styles.summaryLabel}>Healthy</ThemedText>
           </ThemedView>
         </LinearGradient>
@@ -247,7 +246,7 @@ export default function HistoryScreen() {
         >
           <BarChart3 size={responsive.wp(7)} color={COLORS.neutral[0]} strokeWidth={2.5} />
           <ThemedView style={styles.summaryInfo}>
-            <ThemedText style={styles.summaryValue}>{avgConfidence}%</ThemedText>
+            <ThemedText style={styles.summaryValue}>{stats.averageAccuracy}%</ThemedText>
             <ThemedText style={styles.summaryLabel}>Accuracy</ThemedText>
           </ThemedView>
         </LinearGradient>
@@ -280,14 +279,28 @@ export default function HistoryScreen() {
       </Animated.View>
 
       {/* Enhanced Scan List */}
-      <FlatList
-        data={scans}
-        renderItem={renderScanCard}
-        keyExtractor={(item) => item.id}
-        style={styles.scanList}
-        contentContainerStyle={styles.scanListContent}
-        showsVerticalScrollIndicator={false}
-      />
+      {sortedScans.length > 0 ? (
+        <FlatList
+          data={sortedScans}
+          renderItem={renderScanCard}
+          keyExtractor={(item) => item.id}
+          style={styles.scanList}
+          contentContainerStyle={styles.scanListContent}
+          showsVerticalScrollIndicator={false}
+        />
+      ) : (
+        <ThemedView style={styles.emptyState}>
+          <ThemedText style={styles.emptyStateText}>
+            {selectedFilter === 'All' ? 'No scans yet' : `No ${selectedFilter.toLowerCase()} scans found`}
+          </ThemedText>
+          <ThemedText style={styles.emptyStateSubtext}>
+            {selectedFilter === 'All' 
+              ? 'Start by taking your first skin analysis' 
+              : 'Try selecting a different filter or take more scans'
+            }
+          </ThemedText>
+        </ThemedView>
+      )}
     </ThemedView>
   );
 }
@@ -503,5 +516,30 @@ const styles = StyleSheet.create({
     fontSize: TYPOGRAPHY.sizes.sm,
     fontFamily: TYPOGRAPHY.families.medium,
     color: COLORS.neutral[500],
+  },
+  deleteButton: {
+    padding: SPACING.sm,
+    borderRadius: RADIUS.lg,
+    backgroundColor: COLORS.error + '10',
+    marginLeft: SPACING.md,
+  },
+  emptyState: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: SPACING.xl,
+  },
+  emptyStateText: {
+    fontSize: TYPOGRAPHY.sizes.lg,
+    fontFamily: TYPOGRAPHY.families.semibold,
+    color: COLORS.neutral[600],
+    marginBottom: SPACING.sm,
+    textAlign: 'center',
+  },
+  emptyStateSubtext: {
+    fontSize: TYPOGRAPHY.sizes.base,
+    fontFamily: TYPOGRAPHY.families.regular,
+    color: COLORS.neutral[400],
+    textAlign: 'center',
   },
 });
