@@ -3,15 +3,14 @@ import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, ActivityIn
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { predictSkinCondition, Recommendations } from '@/utils/api';
 
-// Working version without context to avoid hook errors
-export default function ResultScreen() {
+// Safe wrapper that doesn't use context
+export default function SafeResultScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
 
   // Expecting params.image (base64 string) and params.imageUri (uri string)
   const imageBase64 = params.image as string | undefined;
   const imageUri = params.imageUri as string | undefined;
-  const textInfo = params.text as string | undefined;
 
   const [result, setResult] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -40,8 +39,6 @@ export default function ResultScreen() {
         };
         
         setResult(analysisResult);
-        console.log('Analysis complete:', analysisResult.predicted_class);
-        
         setLoading(false);
       } catch (error: any) {
         setError(error.message || 'Failed to analyze image');
@@ -50,7 +47,7 @@ export default function ResultScreen() {
     };
     
     fetchResult();
-  }, [imageBase64, textInfo]);
+  }, [imageBase64]);
 
   const getUrgencyColor = (urgency: string) => {
     switch (urgency?.toLowerCase()) {
@@ -78,17 +75,12 @@ export default function ResultScreen() {
     }
   };
 
-
-  //✅ Updated upto here -- 1st upload -- Soumyajit -- 3.31 AM -- 09/08/25
-
-
-
   const renderRecommendationSection = (title: string, items: string[], icon: string) => (
     <View style={styles.recommendationSection}>
       <Text style={styles.sectionTitle}>
         {icon} {title}
       </Text>
-      {items.map((item, index) => (
+      {items?.map((item, index) => (
         <View key={index} style={styles.recommendationItem}>
           <Text style={styles.bulletPoint}>•</Text>
           <Text style={styles.recommendationText}>{item}</Text>
@@ -105,18 +97,18 @@ export default function ResultScreen() {
       
       <View style={styles.urgencyContainer}>
         <Text style={styles.urgencyLabel}>Priority Level:</Text>
-        <View style={[styles.urgencyBadge, { backgroundColor: getUrgencyColor(medicalAdvice.urgency) }]}>
-          <Text style={styles.urgencyText}>{getUrgencyText(medicalAdvice.urgency)}</Text>
+        <View style={[styles.urgencyBadge, { backgroundColor: getUrgencyColor(medicalAdvice?.urgency) }]}>
+          <Text style={styles.urgencyText}>{getUrgencyText(medicalAdvice?.urgency)}</Text>
         </View>
       </View>
 
       <View style={styles.medicalAdviceItem}>
         <Text style={styles.medicalAdviceLabel}>When to see a doctor:</Text>
-        <Text style={styles.medicalAdviceText}>{medicalAdvice.when_to_see_doctor}</Text>
+        <Text style={styles.medicalAdviceText}>{medicalAdvice?.when_to_see_doctor}</Text>
       </View>
 
       <Text style={styles.warningSignsTitle}>⚠️ Warning Signs to Watch For:</Text>
-      {medicalAdvice.warning_signs.map((sign: string, index: number) => (
+      {medicalAdvice?.warning_signs?.map((sign: string, index: number) => (
         <View key={index} style={styles.recommendationItem}>
           <Text style={styles.bulletPoint}>•</Text>
           <Text style={styles.recommendationText}>{sign}</Text>
@@ -400,6 +392,8 @@ const styles = StyleSheet.create({
     color: '#ef4444',
     fontSize: 18,
     marginBottom: 16,
+    textAlign: 'center',
+    paddingHorizontal: 20,
   },
   loadingText: {
     marginTop: 16,

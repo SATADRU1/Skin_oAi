@@ -3,6 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, SafeAreaView, Keyb
 import { Mail, Lock, Eye, EyeOff, Smartphone, User, ArrowLeft } from 'lucide-react-native';
 import { scaleFont } from '@/utils/responsive';
 import { router } from 'expo-router';
+import { AuthContext } from './_layout';
 
 // Color Palette
 const COLORS = {
@@ -25,9 +26,10 @@ export default function SignupScreen() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  // Use loading state from AuthContext
   const [keyboardVisible, setKeyboardVisible] = useState(false);
   const [errors, setErrors] = useState<{[key: string]: string}>({});
+  const { register, loading: authLoading } = React.useContext(AuthContext);
 
   useEffect(() => {
     const keyboardDidShowListener = Keyboard.addListener(
@@ -80,32 +82,40 @@ export default function SignupScreen() {
     }
 
     try {
-      setIsLoading(true);
+      // Loading state is managed by AuthContext
       
-      // Simulate API call for signup
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Call the register function from AuthContext with Firebase
+      const { success, error } = await register(email, password, {
+        displayName: fullName,
+        createdAt: new Date().toISOString(),
+      });
       
-      console.log('Signup successful, navigating to login...');
-      // Show success message
-      Alert.alert(
-        'Success!',
-        'Account created successfully. Please sign in.',
-        [
-          {
-            text: 'OK',
-            onPress: () => {
-              console.log('Navigating to login page...');
-              router.replace('/login');
+      if (success) {
+        console.log('Signup successful, navigating to main app...');
+        // Show success message and navigate to main app
+        Alert.alert(
+          'Success!',
+          'Account created successfully. Welcome to SkinOAI!',
+          [
+            {
+              text: 'Get Started',
+              onPress: () => {
+                console.log('Navigating to main app...');
+                router.replace('/(tabs)');
+              }
             }
-          }
-        ]
-      );
+          ]
+        );
+      } else {
+        // Show error message from Firebase
+        Alert.alert('Signup Failed', error || 'Failed to create account. Please try again.');
+      }
       
-    } catch (error) {
+    } catch (error: any) {
       console.error('Signup failed:', error);
-      Alert.alert('Error', 'Failed to create account. Please try again.');
+      Alert.alert('Error', error.message || 'Failed to create account. Please try again.');
     } finally {
-      setIsLoading(false);
+      // Loading state is managed by AuthContext
     }
   };
 
@@ -254,13 +264,13 @@ export default function SignupScreen() {
               </View>
 
               <TouchableOpacity 
-                style={[styles.button, isLoading && styles.buttonDisabled]}
+                style={[styles.button, authLoading && styles.buttonDisabled]}
                 onPress={handleSignup}
-                disabled={isLoading}
+                disabled={authLoading}
                 activeOpacity={0.9}
               >
                 <Text style={styles.buttonText}>
-                  {isLoading ? 'Creating Account...' : 'Create Account'}
+                  {authLoading ? 'Creating Account...' : 'Create Account'}
                 </Text>
               </TouchableOpacity>
 

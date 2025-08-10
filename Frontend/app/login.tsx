@@ -4,7 +4,7 @@ import { Mail, Lock, Eye, EyeOff, Smartphone } from 'lucide-react-native';
 import { scaleFont } from '@/utils/responsive';
 import { AuthContext } from './_layout';
 import { router } from 'expo-router';
-import { validateDemoCredentials, DEMO_CREDENTIALS } from '@/utils/demoCredentials';
+// Remove demo credentials import as we'll use Firebase Auth
 
 // Color Palette
 const COLORS = {
@@ -24,10 +24,10 @@ export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const { loading } = React.useContext(AuthContext);
   const [keyboardVisible, setKeyboardVisible] = useState(false);
   const [errors, setErrors] = useState<{[key: string]: string}>({});
-  const { login } = React.useContext(AuthContext);
+  const { login, loading: authLoading } = React.useContext(AuthContext);
 
   useEffect(() => {
     const keyboardDidShowListener = Keyboard.addListener(
@@ -65,44 +65,84 @@ export default function LoginScreen() {
   };
 
   const handleLogin = async () => {
+    // Clear previous errors
+    setErrors({});
+    
     if (!validateForm()) {
       return;
     }
 
     try {
-      setIsLoading(true);
+      console.log('Attempting login with email:', email);
       
-      // Simulate API call for login validation
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Call the login function from AuthContext with Firebase
+      const { success, error } = await login(email, password);
       
-      // Validate against demo credentials
-      const user = validateDemoCredentials(email, password);
-      
-      if (user) {
-        console.log('User validated, logging in...');
-        // Call the login function from AuthContext
-        await login();
-        console.log('Login successful, should navigate now...');
-        
-        // Show success message and navigate
-        Alert.alert('Success!', `Welcome back, ${user.name}!`, [
-          { 
-            text: 'OK',
-            onPress: () => {
-              console.log('Manually navigating to tabs...');
-              router.replace('/(tabs)');
-            }
-          }
-        ]);
+      if (success) {
+        console.log('Login successful, navigating to tabs...');
+        // Navigate to tabs on successful login
+        router.replace('/(tabs)');
       } else {
-        Alert.alert('Invalid Credentials', 'Please check your email and password.\n\nDemo credentials:\n• demo@skinoai.com / demo123\n• test@skinoai.com / test123');
+        console.log('Login failed with error:', error);
+        
+        // Show specific error message based on the error type
+        if (error?.includes('No account found')) {
+          setErrors({
+            email: 'No account found with this email',
+            password: ''
+          });
+        } else if (error?.includes('Incorrect password')) {
+          setErrors({
+            email: '',
+            password: 'Incorrect password'
+          });
+        } else if (error?.includes('Invalid email or password')) {
+          setErrors({
+            email: 'Invalid email or password',
+            password: 'Invalid email or password'
+          });
+        } else {
+          // Show general error alert for other errors
+          Alert.alert('Login Failed', error || 'Please check your credentials and try again.');
+        }
       }
       
+    } catch (error: any) {
+      console.error('Login error:', {
+        error,
+        message: error?.message,
+        code: error?.code,
+        stack: error?.stack
+      });
+      
+      Alert.alert(
+        'Login Error', 
+        'An unexpected error occurred. Please try again later.'
+      );
+    }
+  };
+
+  const handleDemoLogin = async (demoEmail: string, demoPassword: string) => {
+    setEmail(demoEmail);
+    setPassword(demoPassword);
+    
+    try {
+      // Call the login function from AuthContext with demo credentials
+      const { success, error } = await login(demoEmail, demoPassword);
+      
+      if (success) {
+        console.log('Demo login successful, navigating to tabs...');
+        // Navigate to tabs on successful login
+        router.replace('/(tabs)');
+      } else {
+        Alert.alert('Demo Login Failed', error || 'Please try again later.');
+      }
     } catch (error) {
-      console.error('Login failed:', error);
-      Alert.alert('Error', 'Login failed. Please try again.');
+      console.error('Demo login error:', error);
+      Alert.alert('Error', 'Failed to login with demo account');
     } finally {
-      setIsLoading(false);
+      // Loading state is managed by AuthContext
+      // No need to set loading state here as it's handled by the AuthContext
     }
   };
 
@@ -191,20 +231,35 @@ export default function LoginScreen() {
               </View>
 
               <TouchableOpacity 
-                style={[styles.button, isLoading && styles.buttonDisabled]}
+                style={[styles.button, authLoading && styles.buttonDisabled]}
+                activeOpacity={0.8}
+                disabled={authLoading}
                 onPress={handleLogin}
-                disabled={isLoading}
-                activeOpacity={0.9}
               >
                 <Text style={styles.buttonText}>
-                  {isLoading ? 'Signing In...' : 'Sign In'}
+                  {authLoading ? 'Signing In...' : 'Sign In'}
                 </Text>
+              </TouchableOpacity>
+
+              {/* Sign Up Button */}
+              <TouchableOpacity 
+                style={styles.signupButton}
+                activeOpacity={0.8}
+                onPress={goToSignup}
+              >
+                <Text style={styles.signupButtonText}>Create New Account</Text>
               </TouchableOpacity>
 
               {/* Demo Info */}
               <View style={styles.demoInfo}>
                 <Text style={styles.demoInfoText}>
                   💡 Demo credentials: demo@skinoai.com / demo123
+                </Text>
+                <Text style={styles.demoInfoSubtext}>
+                  Or create a new account using the button above
+                </Text>
+                <Text style={styles.demoInfoSubtext}>
+                  If demo login fails, please create a new account
                 </Text>
               </View>
 
@@ -352,6 +407,20 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: 'Inter-SemiBold',
   },
+  signupButton: {
+    backgroundColor: COLORS.primaryLight,
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+    marginTop: 16,
+    borderWidth: 1,
+    borderColor: COLORS.primary,
+  },
+  signupButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontFamily: 'Inter-SemiBold',
+  },
   footer: {
     flexDirection: 'row',
     justifyContent: 'center',
@@ -379,5 +448,11 @@ const styles = StyleSheet.create({
     color: '#22C55E', // Green text
     fontSize: 13,
     fontFamily: 'Inter-Medium',
+  },
+  demoInfoSubtext: {
+    color: COLORS.textSecondary,
+    fontSize: 12,
+    fontFamily: 'Inter-Regular',
+    marginTop: 4,
   },
 });

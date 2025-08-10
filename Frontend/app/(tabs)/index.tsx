@@ -107,14 +107,14 @@ export default function HomeScreen() {
           }
         ]}>
           <ThemedView>
-            <ThemedText style={styles.greeting}>Hello there! 👋</ThemedText>
-            <ThemedText style={styles.subtitle}>Let's check your skin health today</ThemedText>
+            <ThemedText style={styles.greeting}>Hello User!</ThemedText>
+            <ThemedText style={styles.subtitle}>Scan. Detect. Protect</ThemedText>
           </ThemedView>
           <LinearGradient
             colors={[COLORS.primary[100], COLORS.primary[200]]}
             style={styles.profileIcon}
           >
-            <Sparkles size={scaleFont(24)} color={COLORS.primary[600]} />
+            <Sparkles size={scaleFont(30)} color={COLORS.primary[600]} style={{marginLeft: 0}}/>
           </LinearGradient>
         </Animated.View>
 
