@@ -54,7 +54,7 @@ class GeminiRecommendationService:
         """
         try:
             # Use the provided API key directly
-            api_key = ".................................."
+            api_key = "AIzaSyDLGxa4DaIODe920y3euj4jeh2SieDsjow"
             if not api_key:
                 logger.error("GEMINI_API_KEY not found")
                 self.is_initialized = False
