@@ -11,44 +11,80 @@ import {
   Sun,
   User,
   LogOut,
+  Settings,
+  Palette,
+  Lock,
+  Heart,
+  Star,
+  MessageCircle,
 } from "lucide-react-native";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Alert,
   ScrollView,
   StyleSheet,
   Switch,
   TouchableOpacity,
+  Animated,
+  Easing,
 } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
 import { useTheme } from '@/hooks/useTheme';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { scaleFont, responsive, getSafeAreaInsets } from '@/utils/responsive';
+import { COLORS, TYPOGRAPHY, SPACING, RADIUS, SHADOWS, ANIMATIONS } from '@/constants/DesignSystem';
 import { AuthContext } from '@/app/_layout';
 import { useContext } from 'react';
 
 const safeArea = getSafeAreaInsets();
 
 export default function SettingsScreen() {
-  // Removed local darkMode state, now using global theme
-  // const [darkMode, setDarkMode] = useState(false);
   const { theme, toggleTheme } = useTheme();
   const { logout } = useContext(AuthContext);
   const [notifications, setNotifications] = useState(true);
   const [dataSharing, setDataSharing] = useState(false);
+  
+  // Animation values
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(30)).current;
+  const scaleAnim = useRef(new Animated.Value(0.95)).current;
+  
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: ANIMATIONS.normal,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: ANIMATIONS.normal,
+        easing: Easing.out(Easing.quad),
+        useNativeDriver: true,
+      }),
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        tension: 100,
+        friction: 8,
+        useNativeDriver: true,
+      })
+    ]).start();
+  }, []);
 
   const settingSections = [
     {
       title: "Preferences",
+      gradient: COLORS.gradients.primary,
       items: [
         {
-          // Use global theme for icon and toggle logic
           icon: theme === 'dark' ? Moon : Sun,
           title: "Dark Mode",
           subtitle: "Toggle dark theme",
           type: "switch",
-          value: theme === 'dark', // Value reflects global theme
-          onToggle: toggleTheme, // Toggles global theme
+          value: theme === 'dark',
+          onToggle: toggleTheme,
+          color: COLORS.accent.purple,
         },
         {
           icon: Bell,
@@ -57,6 +93,7 @@ export default function SettingsScreen() {
           type: "switch",
           value: notifications,
           onToggle: setNotifications,
+          color: COLORS.accent.amber,
         },
         {
           icon: Database,
@@ -65,11 +102,13 @@ export default function SettingsScreen() {
           type: "switch",
           value: dataSharing,
           onToggle: setDataSharing,
+          color: COLORS.secondary[500],
         },
       ],
     },
     {
-      title: "About",
+      title: "Support & Info",
+      gradient: COLORS.gradients.secondary,
       items: [
         {
           icon: Info,
@@ -77,6 +116,7 @@ export default function SettingsScreen() {
           subtitle: "App version and info",
           type: "navigation",
           onPress: () => showAboutAlert(),
+          color: COLORS.primary[500],
         },
         {
           icon: Shield,
@@ -84,6 +124,7 @@ export default function SettingsScreen() {
           subtitle: "How we protect your data",
           type: "navigation",
           onPress: () => showPrivacyAlert(),
+          color: COLORS.accent.emerald,
         },
         {
           icon: HelpCircle,
@@ -91,13 +132,15 @@ export default function SettingsScreen() {
           subtitle: "FAQs and contact info",
           type: "navigation",
           onPress: () => showHelpAlert(),
+          color: COLORS.accent.cyan,
         },
         {
-          icon: Mail,
+          icon: MessageCircle,
           title: "Contact Us",
           subtitle: "Get in touch with our team",
           type: "navigation",
           onPress: () => showContactAlert(),
+          color: COLORS.accent.pink,
         },
       ],
     },
@@ -136,72 +179,145 @@ export default function SettingsScreen() {
   };
 
   return (
-    // Use ThemedView for the main container to apply theme background
     <ThemedView style={styles.container}>
-      {/* Header */}
-      <ThemedView style={styles.header}>
-        <ThemedText style={styles.title}>Settings</ThemedText>
-        <ThemedView style={styles.versionBadge}>
-          <Smartphone size={16} color="#3b82f6" />
-          <ThemedText style={styles.versionText}>v1.0.0</ThemedText>
+      {/* Modern Header */}
+      <Animated.View style={[
+        styles.header,
+        {
+          opacity: fadeAnim,
+          transform: [{ translateY: slideAnim }]
+        }
+      ]}>
+        <ThemedView>
+          <ThemedText style={styles.title}>Settings ⚙️</ThemedText>
+          <ThemedText style={styles.subtitle}>Customize your experience</ThemedText>
         </ThemedView>
-      </ThemedView>
+        <LinearGradient
+          colors={[COLORS.primary[100], COLORS.primary[200]]}
+          style={styles.versionBadge}
+        >
+          <Star size={responsive.wp(4)} color={COLORS.primary[600]} />
+          <ThemedText style={styles.versionText}>v1.0.0</ThemedText>
+        </LinearGradient>
+      </Animated.View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {settingSections.map((section, sectionIndex) => (
-          // Use ThemedView for sections to apply theme background
-          <ThemedView key={sectionIndex} style={styles.section}>
-            <ThemedText style={styles.sectionTitle}>{section.title}</ThemedText>
+          <Animated.View
+            key={sectionIndex}
+            style={[
+              {
+                opacity: scaleAnim,
+                transform: [{ scale: scaleAnim }]
+              }
+            ]}
+          >
+            <ThemedView style={styles.section}>
+              <ThemedView style={styles.sectionHeader}>
+                <ThemedText style={styles.sectionTitle}>{section.title}</ThemedText>
+              </ThemedView>
 
-            {section.items.map((item, itemIndex) => {
-              // Conditionally render TouchableOpacity for navigation items,
-              // and ThemedView for switch items to allow interaction with the Switch.
-              const ItemWrapper = item.type === "switch" ? ThemedView : TouchableOpacity;
+              {section.items.map((item, itemIndex) => {
+                const ItemWrapper = item.type === "switch" ? ThemedView : TouchableOpacity;
 
-              return (
-                <ItemWrapper
-                  key={itemIndex}
-                  style={styles.settingItem}
-                  // Only apply onPress for navigation type items
-                  onPress={item.type === "navigation" ? item.onPress : undefined}
-                  // The 'disabled' prop is no longer needed on ItemWrapper
-                >
-                  <ThemedView style={styles.settingIcon}>
-                    <item.icon size={20} color="#3b82f6" strokeWidth={2} />
-                  </ThemedView>
+                return (
+                  <ItemWrapper
+                    key={itemIndex}
+                    style={styles.settingItem}
+                    onPress={item.type === "navigation" ? item.onPress : undefined}
+                    activeOpacity={item.type === "navigation" ? 0.7 : 1}
+                  >
+                    <LinearGradient
+                      colors={[item.color + '20', item.color + '30']}
+                      style={styles.settingIcon}
+                    >
+                      <item.icon size={responsive.wp(5)} color={item.color} strokeWidth={2.5} />
+                    </LinearGradient>
 
-                  <ThemedView style={styles.settingContent}>
-                    <ThemedText style={styles.settingTitle}>{item.title}</ThemedText>
-                    <ThemedText style={styles.settingSubtitle}>{item.subtitle}</ThemedText>
-                  </ThemedView>
+                    <ThemedView style={styles.settingContent}>
+                      <ThemedText style={styles.settingTitle}>{item.title}</ThemedText>
+                      <ThemedText style={styles.settingSubtitle}>{item.subtitle}</ThemedText>
+                    </ThemedView>
 
-                  {item.type === "switch" ? (
-                    <Switch
-                      value={item.value}
-                      onValueChange={item.onToggle}
-                      trackColor={{ false: theme === 'light' ? "#f3f4f6" : "#4b5563", true: "#3b82f6" }}
-                      thumbColor={item.value ? "#ffffff" : (theme === 'light' ? "#9ca3af" : "#d1d5db")}
-                    />
-                  ) : (
-                    <ChevronRight size={20} color="#9ca3af" />
-                  )}
-                </ItemWrapper>
-              );
-            })}
-          </ThemedView>
+                    {item.type === "switch" ? (
+                      <Switch
+                        value={item.value}
+                        onValueChange={item.onToggle}
+                        trackColor={{ 
+                          false: COLORS.neutral[200], 
+                          true: item.color 
+                        }}
+                        thumbColor={item.value ? COLORS.neutral[0] : COLORS.neutral[400]}
+                        ios_backgroundColor={COLORS.neutral[200]}
+                      />
+                    ) : (
+                      <ThemedView style={styles.chevronContainer}>
+                        <ChevronRight size={responsive.wp(5)} color={COLORS.neutral[400]} />
+                      </ThemedView>
+                    )}
+                  </ItemWrapper>
+                );
+              })}
+            </ThemedView>
+          </Animated.View>
         ))}
 
-        {/* App Info */}
-        <ThemedView style={styles.appInfo}>
-          <ThemedText style={styles.appInfoTitle}>Skin AI</ThemedText>
-          <ThemedText style={styles.appInfoSubtitle}>
-            Advanced skin analysis powered by artificial intelligence
-          </ThemedText>
-          <ThemedText style={styles.disclaimer}>
-            This app is not a substitute for professional medical advice. Always
-            consult with a healthcare provider for medical concerns.
-          </ThemedText>
-        </ThemedView>
+        {/* Enhanced App Info */}
+        <Animated.View style={[
+          {
+            opacity: fadeAnim,
+            transform: [{ translateY: slideAnim }]
+          }
+        ]}>
+          <LinearGradient
+            colors={COLORS.gradients.accent}
+            style={styles.appInfo}
+          >
+            <ThemedView style={styles.appInfoContent}>
+              <ThemedView style={styles.appIconContainer}>
+                <Heart size={responsive.wp(8)} color={COLORS.neutral[0]} strokeWidth={2} />
+              </ThemedView>
+              <ThemedText style={styles.appInfoTitle}>SkinOAI</ThemedText>
+              <ThemedText style={styles.appInfoSubtitle}>
+                Advanced AI-powered skin analysis for everyone
+              </ThemedText>
+              <ThemedText style={styles.disclaimer}>
+                ⚠️ This app is not a substitute for professional medical advice. Always consult with a healthcare provider for medical concerns.
+              </ThemedText>
+            </ThemedView>
+          </LinearGradient>
+        </Animated.View>
+
+        {/* Logout Button */}
+        <Animated.View style={[
+          {
+            opacity: fadeAnim,
+            transform: [{ scale: scaleAnim }]
+          }
+        ]}>
+          <TouchableOpacity
+            style={styles.logoutButton}
+            onPress={() => {
+              Alert.alert(
+                "Logout",
+                "Are you sure you want to logout?",
+                [
+                  { text: "Cancel", style: "cancel" },
+                  { text: "Logout", style: "destructive", onPress: logout }
+                ]
+              );
+            }}
+            activeOpacity={0.8}
+          >
+            <LinearGradient
+              colors={[COLORS.error + '20', COLORS.error + '30']}
+              style={styles.logoutGradient}
+            >
+              <LogOut size={responsive.wp(5)} color={COLORS.error} strokeWidth={2.5} />
+              <ThemedText style={styles.logoutText}>Logout</ThemedText>
+            </LinearGradient>
+          </TouchableOpacity>
+        </Animated.View>
       </ScrollView>
     </ThemedView>
   );
@@ -212,117 +328,163 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingTop: safeArea.top,
     paddingBottom: safeArea.bottom,
+    backgroundColor: COLORS.neutral[50],
   },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: responsive.wp(5),
-    paddingVertical: responsive.hp(2.5),
+    alignItems: "flex-end",
+    paddingHorizontal: SPACING.lg,
+    paddingVertical: SPACING.xl,
   },
   title: {
-    fontSize: scaleFont(28),
-    fontFamily: "Inter-Bold",
+    fontSize: TYPOGRAPHY.sizes['3xl'],
+    fontFamily: TYPOGRAPHY.families.bold,
+    color: COLORS.neutral[900],
+    lineHeight: TYPOGRAPHY.sizes['3xl'] * 1.2,
+  },
+  subtitle: {
+    fontSize: TYPOGRAPHY.sizes.base,
+    fontFamily: TYPOGRAPHY.families.regular,
+    color: COLORS.neutral[600],
+    marginTop: SPACING.xs,
   },
   versionBadge: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#f0f9ff",
-    paddingHorizontal: responsive.wp(3),
-    paddingVertical: responsive.hp(0.8),
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: "#e0f2fe",
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.sm,
+    borderRadius: RADIUS.xl,
+    ...SHADOWS.sm,
   },
   versionText: {
-    fontSize: scaleFont(12),
-    fontFamily: "Inter-Medium",
-    color: "#0369a1",
-    marginLeft: 4,
+    fontSize: TYPOGRAPHY.sizes.xs,
+    fontFamily: TYPOGRAPHY.families.semibold,
+    color: COLORS.primary[700],
+    marginLeft: SPACING.xs,
   },
   content: {
-    paddingHorizontal: responsive.wp(5),
+    paddingHorizontal: SPACING.lg,
   },
   section: {
-    marginBottom: responsive.hp(4),
-    borderRadius: 12,
-    shadowColor: "#000000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 2,
+    backgroundColor: COLORS.surface.primary,
+    borderRadius: RADIUS['2xl'],
+    marginBottom: SPACING['3xl'],
+    ...SHADOWS.lg,
+  },
+  sectionHeader: {
+    backgroundColor: 'transparent',
   },
   sectionTitle: {
-    fontSize: scaleFont(16),
-    fontFamily: "Inter-SemiBold",
-    marginBottom: responsive.hp(1.5),
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-    paddingHorizontal: responsive.wp(4),
-    paddingTop: responsive.hp(2),
+    fontSize: TYPOGRAPHY.sizes.lg,
+    fontFamily: TYPOGRAPHY.families.bold,
+    color: COLORS.neutral[800],
+    paddingHorizontal: SPACING.lg,
+    paddingTop: SPACING.lg,
+    paddingBottom: SPACING.sm,
+    textTransform: 'none',
+    letterSpacing: 0,
   },
   settingItem: {
-    borderRadius: 12,
-    padding: responsive.wp(4),
     flexDirection: "row",
     alignItems: "center",
-    marginHorizontal: responsive.wp(4),
-    marginBottom: responsive.hp(1),
-    elevation: 2,
-    shadowColor: "#000000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
+    paddingHorizontal: SPACING.lg,
+    paddingVertical: SPACING.lg,
+    backgroundColor: 'transparent',
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.neutral[100],
   },
   settingIcon: {
-    width: responsive.wp(10),
-    height: responsive.wp(10),
-    backgroundColor: "#f0f9ff",
-    borderRadius: responsive.wp(5),
+    width: responsive.wp(12),
+    height: responsive.wp(12),
+    borderRadius: RADIUS.xl,
     justifyContent: "center",
     alignItems: "center",
-    marginRight: responsive.wp(4),
+    marginRight: SPACING.lg,
+    ...SHADOWS.sm,
   },
   settingContent: {
     flex: 1,
+    backgroundColor: 'transparent',
   },
   settingTitle: {
-    fontSize: scaleFont(16),
-    fontFamily: "Inter-SemiBold",
-    marginBottom: 2,
+    fontSize: TYPOGRAPHY.sizes.lg,
+    fontFamily: TYPOGRAPHY.families.semibold,
+    color: COLORS.neutral[800],
+    lineHeight: TYPOGRAPHY.sizes.lg * 1.2,
   },
   settingSubtitle: {
-    fontSize: scaleFont(14),
-    fontFamily: "Inter-Regular",
+    fontSize: TYPOGRAPHY.sizes.sm,
+    fontFamily: TYPOGRAPHY.families.regular,
+    color: COLORS.neutral[600],
+    marginTop: SPACING.xs / 2,
+    lineHeight: TYPOGRAPHY.sizes.sm * 1.3,
+  },
+  chevronContainer: {
+    backgroundColor: 'transparent',
+    padding: SPACING.xs,
   },
   appInfo: {
-    borderRadius: 12,
-    padding: responsive.wp(5),
-    marginBottom: responsive.hp(2.5),
+    borderRadius: RADIUS['2xl'],
+    padding: SPACING['2xl'],
+    marginBottom: SPACING.lg,
     alignItems: "center",
-    elevation: 2,
-    shadowColor: "#000000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
+    ...SHADOWS.xl,
+  },
+  appInfoContent: {
+    alignItems: 'center',
+    backgroundColor: 'transparent',
+  },
+  appIconContainer: {
+    backgroundColor: COLORS.surface.glass,
+    padding: SPACING.lg,
+    borderRadius: RADIUS.full,
+    marginBottom: SPACING.lg,
+    ...SHADOWS.md,
   },
   appInfoTitle: {
-    fontSize: scaleFont(20),
-    fontFamily: "Inter-Bold",
-    marginBottom: responsive.hp(1),
+    fontSize: TYPOGRAPHY.sizes['2xl'],
+    fontFamily: TYPOGRAPHY.families.bold,
+    color: COLORS.neutral[0],
+    marginBottom: SPACING.sm,
+    lineHeight: TYPOGRAPHY.sizes['2xl'] * 1.2,
   },
   appInfoSubtitle: {
-    fontSize: scaleFont(14),
-    fontFamily: "Inter-Regular",
+    fontSize: TYPOGRAPHY.sizes.base,
+    fontFamily: TYPOGRAPHY.families.regular,
+    color: COLORS.surface.primary,
     textAlign: "center",
-    marginBottom: responsive.hp(2),
-    lineHeight: scaleFont(20),
+    marginBottom: SPACING.lg,
+    lineHeight: TYPOGRAPHY.sizes.base * 1.4,
+    opacity: 0.9,
   },
   disclaimer: {
-    fontSize: scaleFont(12),
-    fontFamily: "Inter-Regular",
+    fontSize: TYPOGRAPHY.sizes.sm,
+    fontFamily: TYPOGRAPHY.families.regular,
+    color: COLORS.surface.primary,
     textAlign: "center",
-    lineHeight: scaleFont(16),
-    fontStyle: "italic",
+    lineHeight: TYPOGRAPHY.sizes.sm * 1.4,
+    opacity: 0.8,
+    fontStyle: 'normal',
+  },
+  logoutButton: {
+    marginBottom: SPACING['4xl'],
+    borderRadius: RADIUS['2xl'],
+    overflow: 'hidden',
+    ...SHADOWS.lg,
+  },
+  logoutGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: SPACING.xl,
+    paddingVertical: SPACING.lg,
+    borderRadius: RADIUS['2xl'],
+  },
+  logoutText: {
+    fontSize: TYPOGRAPHY.sizes.lg,
+    fontFamily: TYPOGRAPHY.families.semibold,
+    color: COLORS.error,
+    marginLeft: SPACING.md,
   },
 });

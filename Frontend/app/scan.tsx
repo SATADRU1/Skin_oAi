@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import * as ImagePicker from "expo-image-picker";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
@@ -9,18 +9,33 @@ import {
   Upload,
   X,
   Zap,
+  Sparkles,
+  Shield,
+  Eye,
+  Target,
+  Lightbulb,
+  CheckCircle,
+  ArrowLeft,
+  Image as ImageIcon,
+  Scan,
 } from "lucide-react-native";
 import {
   Alert,
   Dimensions,
   StyleSheet,
-  Text,
   TouchableOpacity,
   View,
+  Animated,
+  Easing,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { ThemedText } from '@/components/ThemedText';
+import { ThemedView } from '@/components/ThemedView';
+import { scaleFont, responsive, getSafeAreaInsets } from '@/utils/responsive';
+import { COLORS, TYPOGRAPHY, SPACING, RADIUS, SHADOWS, ANIMATIONS } from '@/constants/DesignSystem';
 
 const { width, height } = Dimensions.get("window");
+const safeArea = getSafeAreaInsets();
 
 export default function ScanScreen() {
   const router = useRouter();
@@ -28,6 +43,80 @@ export default function ScanScreen() {
   const [analysisStep, setAnalysisStep] = useState<
     "preparing" | "analyzing" | "finalizing"
   >("preparing");
+  
+  // Animation values
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(30)).current;
+  const scaleAnim = useRef(new Animated.Value(0.9)).current;
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+  const progressAnim = useRef(new Animated.Value(0)).current;
+  const scanFrameAnim = useRef(new Animated.Value(1)).current;
+  
+  useEffect(() => {
+    // Entrance animations
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: ANIMATIONS.normal,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: ANIMATIONS.normal,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        tension: 100,
+        friction: 8,
+        useNativeDriver: true,
+      })
+    ]).start();
+    
+    // Scan frame pulse animation
+    const scanPulse = Animated.loop(
+      Animated.sequence([
+        Animated.timing(scanFrameAnim, {
+          toValue: 1.05,
+          duration: 1500,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+        Animated.timing(scanFrameAnim, {
+          toValue: 1,
+          duration: 1500,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        })
+      ])
+    );
+    
+    const buttonPulse = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, {
+          toValue: 1.1,
+          duration: 2000,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulseAnim, {
+          toValue: 1,
+          duration: 2000,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        })
+      ])
+    );
+    
+    scanPulse.start();
+    buttonPulse.start();
+    
+    return () => {
+      scanPulse.stop();
+      buttonPulse.stop();
+    };
+  }, []);
 
   const handleTakePhoto = async () => {
     try {
@@ -187,173 +276,331 @@ export default function ScanScreen() {
 
   if (isAnalyzing) {
     return (
-      <SafeAreaView style={styles.container}>
+      <ThemedView style={styles.analyzingContainer}>
         <LinearGradient
-          colors={["#1e40af", "#3b82f6"]}
-          style={styles.analyzingContainer}
+          colors={COLORS.gradients.primary}
+          start={{x: 0, y: 0}}
+          end={{x: 1, y: 1}}
+          style={styles.analyzingBackground}
         >
-          <View style={styles.analyzingContent}>
-            <View style={styles.analyzeIcon}>
-              <Zap size={48} color="#ffffff" />
-            </View>
-            <Text style={styles.analyzingTitle}>Analyzing Your Skin</Text>
-            <Text style={styles.analyzingSubtitle}>{getAnalysisStepText()}</Text>
-            <View style={styles.progressContainer}>
-              <View style={styles.progressBar}>
-                <View
+          <Animated.View style={[
+            styles.analyzingContent,
+            {
+              opacity: fadeAnim,
+              transform: [{ translateY: slideAnim }]
+            }
+          ]}>
+            {/* AI Analysis Icon */}
+            <Animated.View style={[
+              styles.analyzeIconContainer,
+              {
+                transform: [{ scale: pulseAnim }]
+              }
+            ]}>
+              <LinearGradient
+                colors={[COLORS.surface.glass, COLORS.surface.primary]}
+                style={styles.analyzeIcon}
+              >
+                <Sparkles size={responsive.wp(12)} color={COLORS.neutral[0]} strokeWidth={2} />
+              </LinearGradient>
+            </Animated.View>
+            
+            <ThemedText style={styles.analyzingTitle}>🔬 AI Analysis in Progress</ThemedText>
+            <ThemedText style={styles.analyzingSubtitle}>{getAnalysisStepText()}</ThemedText>
+            
+            {/* Enhanced Progress Bar */}
+            <ThemedView style={styles.progressContainer}>
+              <ThemedView style={styles.progressBar}>
+                <Animated.View style={[
+                  styles.progressFill,
+                  {
+                    width: progressAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: ['0%', getAnalysisProgress()],
+                    })
+                  }
+                ]} />
+                <LinearGradient
+                  colors={COLORS.gradients.secondary}
                   style={[
-                    styles.progressFill,
-                    { width: getAnalysisProgress() },
+                    styles.progressGradient,
+                    { width: getAnalysisProgress() }
                   ]}
                 />
-              </View>
-              <Text style={styles.progressText}>
+              </ThemedView>
+              <ThemedText style={styles.progressText}>
                 {getAnalysisProgress()} Complete
-              </Text>
-            </View>
-            <View style={styles.analysisSteps}>
-              <View
-                style={[
-                  styles.stepIndicator,
-                  analysisStep === "preparing" && styles.activeStep,
-                ]}
-              >
-                <Text style={styles.stepText}>Preparing</Text>
-              </View>
-              <View
-                style={[
-                  styles.stepIndicator,
-                  analysisStep === "analyzing" && styles.activeStep,
-                ]}
-              >
-                <Text style={styles.stepText}>Analyzing</Text>
-              </View>
-              <View
-                style={[
-                  styles.stepIndicator,
-                  analysisStep === "finalizing" && styles.activeStep,
-                ]}
-              >
-                <Text style={styles.stepText}>Finalizing</Text>
-              </View>
-            </View>
-          </View>
+              </ThemedText>
+            </ThemedView>
+            
+            {/* Modern Step Indicators */}
+            <ThemedView style={styles.analysisSteps}>
+              <ThemedView style={[
+                styles.stepIndicator,
+                analysisStep === "preparing" && styles.activeStep,
+              ]}>
+                <Target size={responsive.wp(4)} color={analysisStep === "preparing" ? COLORS.secondary[500] : COLORS.surface.primary} />
+                <ThemedText style={[
+                  styles.stepText,
+                  analysisStep === "preparing" && styles.activeStepText
+                ]}>Preparing</ThemedText>
+              </ThemedView>
+              <ThemedView style={[
+                styles.stepIndicator,
+                analysisStep === "analyzing" && styles.activeStep,
+              ]}>
+                <Zap size={responsive.wp(4)} color={analysisStep === "analyzing" ? COLORS.secondary[500] : COLORS.surface.primary} />
+                <ThemedText style={[
+                  styles.stepText,
+                  analysisStep === "analyzing" && styles.activeStepText
+                ]}>Analyzing</ThemedText>
+              </ThemedView>
+              <ThemedView style={[
+                styles.stepIndicator,
+                analysisStep === "finalizing" && styles.activeStep,
+              ]}>
+                <CheckCircle size={responsive.wp(4)} color={analysisStep === "finalizing" ? COLORS.secondary[500] : COLORS.surface.primary} />
+                <ThemedText style={[
+                  styles.stepText,
+                  analysisStep === "finalizing" && styles.activeStepText
+                ]}>Finalizing</ThemedText>
+              </ThemedView>
+            </ThemedView>
+          </Animated.View>
         </LinearGradient>
-      </SafeAreaView>
+      </ThemedView>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <X size={24} color="#ffffff" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Scan Your Skin</Text>
-        <View style={styles.placeholder} />
-      </View>
+    <ThemedView style={styles.container}>
+      <LinearGradient
+        colors={['#000000', '#1a1a2e', '#16213e']}
+        style={styles.backgroundGradient}
+      >
+        {/* Modern Header */}
+        <Animated.View style={[
+          styles.header,
+          {
+            opacity: fadeAnim,
+            transform: [{ translateY: slideAnim }]
+          }
+        ]}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backButton} activeOpacity={0.7}>
+            <LinearGradient
+              colors={[COLORS.surface.glass, COLORS.surface.primary]}
+              style={styles.backButtonGradient}
+            >
+              <ArrowLeft size={responsive.wp(6)} color={COLORS.neutral[0]} strokeWidth={2.5} />
+            </LinearGradient>
+          </TouchableOpacity>
+          <ThemedText style={styles.headerTitle}>📷 AI Skin Scanner</ThemedText>
+          <ThemedView style={styles.headerPlaceholder} />
+        </Animated.View>
 
-      {/* Camera Preview Placeholder */}
-      <View style={styles.cameraContainer}>
-        <View style={styles.cameraPlaceholder}>
-          <CameraIcon size={64} color="#3b82f6" />
-          <Text style={styles.cameraPlaceholderText}>
-            Camera Preview
-          </Text>
-        </View>
-        {/* Camera Overlay */}
-        <View style={styles.overlay}>
-          <View style={styles.scanFrame} />
-          <Text style={styles.overlayText}>
-            Position the affected area within the frame
-          </Text>
-        </View>
-      </View>
+        {/* Enhanced Camera Preview */}
+        <Animated.View style={[
+          styles.cameraContainer,
+          {
+            opacity: scaleAnim,
+            transform: [{ scale: scaleAnim }]
+          }
+        ]}>
+          <LinearGradient
+            colors={[COLORS.neutral[800], COLORS.neutral[700]]}
+            style={styles.cameraPlaceholder}
+          >
+            <Animated.View style={[
+              styles.cameraIconContainer,
+              {
+                transform: [{ scale: pulseAnim }]
+              }
+            ]}>
+              <Scan size={responsive.wp(16)} color={COLORS.primary[400]} strokeWidth={1.5} />
+            </Animated.View>
+            <ThemedText style={styles.cameraPlaceholderText}>
+              Camera will appear here
+            </ThemedText>
+          </LinearGradient>
+          
+          {/* Enhanced Overlay */}
+          <ThemedView style={styles.overlay}>
+            <Animated.View style={[
+              styles.scanFrame,
+              {
+                transform: [{ scale: scanFrameAnim }]
+              }
+            ]} />
+            <ThemedView style={styles.scanCorners}>
+              <ThemedView style={[styles.corner, styles.topLeft]} />
+              <ThemedView style={[styles.corner, styles.topRight]} />
+              <ThemedView style={[styles.corner, styles.bottomLeft]} />
+              <ThemedView style={[styles.corner, styles.bottomRight]} />
+            </ThemedView>
+            <ThemedText style={styles.overlayText}>
+              🎯 Position the affected area within the frame
+            </ThemedText>
+            <ThemedText style={styles.overlaySubtext}>
+              AI will analyze your skin condition
+            </ThemedText>
+          </ThemedView>
+        </Animated.View>
 
-      {/* Instructions */}
-      <View style={styles.instructionsContainer}>
-        <View style={styles.instructionItem}>
-          <Info size={16} color="#3b82f6" />
-          <Text style={styles.instructionText}>Ensure good lighting and clear focus</Text>
-        </View>
-        <View style={styles.instructionItem}>
-          <Info size={16} color="#3b82f6" />
-          <Text style={styles.instructionText}>Keep the camera steady for best results</Text>
-        </View>
-      </View>
+        {/* Enhanced Instructions */}
+        <Animated.View style={[
+          styles.instructionsContainer,
+          {
+            opacity: fadeAnim,
+            transform: [{ translateY: slideAnim }]
+          }
+        ]}>
+          <ThemedView style={styles.instructionCard}>
+            <ThemedView style={styles.instructionItem}>
+              <LinearGradient
+                colors={[COLORS.accent.amber + '30', COLORS.accent.amber + '20']}
+                style={styles.instructionIconContainer}
+              >
+                <Lightbulb size={responsive.wp(4)} color={COLORS.accent.amber} />
+              </LinearGradient>
+              <ThemedText style={styles.instructionText}>Ensure good lighting and clear focus</ThemedText>
+            </ThemedView>
+            <ThemedView style={styles.instructionItem}>
+              <LinearGradient
+                colors={[COLORS.secondary[500] + '30', COLORS.secondary[500] + '20']}
+                style={styles.instructionIconContainer}
+              >
+                <Eye size={responsive.wp(4)} color={COLORS.secondary[500]} />
+              </LinearGradient>
+              <ThemedText style={styles.instructionText}>Keep the camera steady for best results</ThemedText>
+            </ThemedView>
+          </ThemedView>
+        </Animated.View>
 
-      {/* Controls */}
-      <View style={styles.controls}>
-        <TouchableOpacity style={styles.uploadButton} onPress={handleUploadPhoto}>
-          <View style={styles.uploadIconContainer}>
-            <Upload size={20} color="#3b82f6" />
-          </View>
-          <Text style={styles.uploadText}>Upload Photo</Text>
-        </TouchableOpacity>
+        {/* Enhanced Controls */}
+        <Animated.View style={[
+          styles.controls,
+          {
+            opacity: scaleAnim,
+            transform: [{ scale: scaleAnim }]
+          }
+        ]}>
+          <TouchableOpacity 
+            style={styles.uploadButton} 
+            onPress={handleUploadPhoto}
+            activeOpacity={0.8}
+          >
+            <LinearGradient
+              colors={[COLORS.accent.cyan + '30', COLORS.accent.cyan + '20']}
+              style={styles.uploadIconContainer}
+            >
+              <ImageIcon size={responsive.wp(6)} color={COLORS.accent.cyan} strokeWidth={2} />
+            </LinearGradient>
+            <ThemedText style={styles.uploadText}>Upload</ThemedText>
+          </TouchableOpacity>
 
-        <TouchableOpacity 
-          style={styles.captureButton} 
-          onPress={handleTakePhoto}
-        >
-          <View style={styles.captureInner}>
-            <CameraIcon size={32} color="#ffffff" />
-          </View>
-        </TouchableOpacity>
+          <Animated.View style={[{
+            transform: [{ scale: pulseAnim }]
+          }]}>
+            <TouchableOpacity 
+              style={styles.captureButton} 
+              onPress={handleTakePhoto}
+              activeOpacity={0.9}
+            >
+              <LinearGradient
+                colors={COLORS.gradients.primary}
+                style={styles.captureGradient}
+              >
+                <ThemedView style={styles.captureInner}>
+                  <CameraIcon size={responsive.wp(8)} color={COLORS.neutral[0]} strokeWidth={2.5} />
+                </ThemedView>
+              </LinearGradient>
+            </TouchableOpacity>
+          </Animated.View>
 
-        <View style={styles.placeholder} />
-      </View>
-    </SafeAreaView>
+          <TouchableOpacity 
+            style={styles.uploadButton}
+            activeOpacity={0.8}
+          >
+            <LinearGradient
+              colors={[COLORS.accent.emerald + '30', COLORS.accent.emerald + '20']}
+              style={styles.uploadIconContainer}
+            >
+              <Shield size={responsive.wp(6)} color={COLORS.accent.emerald} strokeWidth={2} />
+            </LinearGradient>
+            <ThemedText style={styles.uploadText}>Guide</ThemedText>
+          </TouchableOpacity>
+        </Animated.View>
+      </LinearGradient>
+    </ThemedView>
   );
 }
 
 const styles = StyleSheet.create({
+  // Main Container
   container: {
     flex: 1,
-    backgroundColor: "#000000",
+    paddingTop: safeArea.top,
+    paddingBottom: safeArea.bottom,
   },
+  backgroundGradient: {
+    flex: 1,
+  },
+
+  // Header Styles
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    paddingHorizontal: SPACING.lg,
+    paddingVertical: SPACING.xl,
+    backgroundColor: 'transparent',
   },
   backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    borderRadius: RADIUS.full,
+    overflow: 'hidden',
+    ...SHADOWS.lg,
+  },
+  backButtonGradient: {
+    width: responsive.wp(12),
+    height: responsive.wp(12),
     justifyContent: "center",
     alignItems: "center",
+    borderRadius: RADIUS.full,
   },
   headerTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#ffffff",
+    fontSize: TYPOGRAPHY.sizes.xl,
+    fontFamily: TYPOGRAPHY.families.bold,
+    color: COLORS.neutral[0],
+    textAlign: 'center',
   },
-  placeholder: {
-    width: 40,
+  headerPlaceholder: {
+    width: responsive.wp(12),
+    backgroundColor: 'transparent',
   },
+
+  // Camera Styles
   cameraContainer: {
     flex: 1,
-    margin: 20,
-    borderRadius: 16,
+    margin: SPACING.lg,
+    borderRadius: RADIUS['2xl'],
     overflow: "hidden",
-    backgroundColor: "#1f2937",
+    ...SHADOWS.xl,
   },
   cameraPlaceholder: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#374151",
+  },
+  cameraIconContainer: {
+    marginBottom: SPACING.lg,
   },
   cameraPlaceholderText: {
-    fontSize: 16,
-    color: "#9ca3af",
-    marginTop: 12,
+    fontSize: TYPOGRAPHY.sizes.lg,
+    fontFamily: TYPOGRAPHY.families.medium,
+    color: COLORS.neutral[400],
   },
+
+  // Overlay Styles
   overlay: {
     position: "absolute",
     top: 0,
@@ -362,167 +609,255 @@ const styles = StyleSheet.create({
     bottom: 0,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.3)",
+    backgroundColor: COLORS.surface.overlay,
     zIndex: 1,
   },
   scanFrame: {
-    width: 250,
-    height: 250,
+    width: responsive.wp(65),
+    height: responsive.wp(65),
     borderWidth: 3,
-    borderColor: "#3b82f6",
-    borderRadius: 16,
+    borderColor: COLORS.primary[400],
+    borderRadius: RADIUS['2xl'],
     backgroundColor: "transparent",
-    borderStyle: "dashed",
+  },
+  scanCorners: {
+    position: 'absolute',
+    width: responsive.wp(65),
+    height: responsive.wp(65),
+  },
+  corner: {
+    position: 'absolute',
+    width: responsive.wp(6),
+    height: responsive.wp(6),
+    borderColor: COLORS.secondary[400],
+    borderWidth: 4,
+  },
+  topLeft: {
+    top: -2,
+    left: -2,
+    borderRightWidth: 0,
+    borderBottomWidth: 0,
+  },
+  topRight: {
+    top: -2,
+    right: -2,
+    borderLeftWidth: 0,
+    borderBottomWidth: 0,
+  },
+  bottomLeft: {
+    bottom: -2,
+    left: -2,
+    borderRightWidth: 0,
+    borderTopWidth: 0,
+  },
+  bottomRight: {
+    bottom: -2,
+    right: -2,
+    borderLeftWidth: 0,
+    borderTopWidth: 0,
   },
   overlayText: {
-    fontSize: 16,
-    fontWeight: "500",
-    color: "#ffffff",
+    fontSize: TYPOGRAPHY.sizes.lg,
+    fontFamily: TYPOGRAPHY.families.semibold,
+    color: COLORS.neutral[0],
     textAlign: "center",
-    marginTop: 20,
-    paddingHorizontal: 40,
+    marginTop: SPACING['2xl'],
+    paddingHorizontal: SPACING['2xl'],
   },
+  overlaySubtext: {
+    fontSize: TYPOGRAPHY.sizes.base,
+    fontFamily: TYPOGRAPHY.families.regular,
+    color: COLORS.surface.primary,
+    textAlign: "center",
+    marginTop: SPACING.sm,
+    opacity: 0.8,
+  },
+
+  // Instructions
   instructionsContainer: {
-    paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingHorizontal: SPACING.lg,
+    paddingVertical: SPACING.lg,
+  },
+  instructionCard: {
+    backgroundColor: COLORS.surface.glass,
+    borderRadius: RADIUS.xl,
+    padding: SPACING.lg,
+    ...SHADOWS.md,
   },
   instructionItem: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 8,
+    marginBottom: SPACING.md,
+  },
+  instructionIconContainer: {
+    width: responsive.wp(10),
+    height: responsive.wp(10),
+    borderRadius: RADIUS.full,
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: SPACING.md,
   },
   instructionText: {
-    fontSize: 14,
-    fontWeight: "400",
-    color: "#ffffff",
-    marginLeft: 8,
+    fontSize: TYPOGRAPHY.sizes.base,
+    fontFamily: TYPOGRAPHY.families.regular,
+    color: COLORS.neutral[0],
+    flex: 1,
+    lineHeight: TYPOGRAPHY.sizes.base * 1.4,
   },
+
+  // Controls
   controls: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    justifyContent: "space-around",
     alignItems: "center",
-    paddingHorizontal: 40,
-    paddingVertical: 30,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    paddingHorizontal: SPACING['2xl'],
+    paddingVertical: SPACING['2xl'],
+    backgroundColor: COLORS.surface.overlay,
   },
   uploadButton: {
     alignItems: "center",
-    width: 80,
+    width: responsive.wp(20),
   },
   uploadIconContainer: {
-    width: 48,
-    height: 48,
-    backgroundColor: "rgba(59, 130, 246, 0.2)",
-    borderRadius: 24,
+    width: responsive.wp(14),
+    height: responsive.wp(14),
+    borderRadius: RADIUS.full,
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 4,
-    borderWidth: 1,
-    borderColor: "rgba(59, 130, 246, 0.3)",
+    marginBottom: SPACING.sm,
+    ...SHADOWS.lg,
   },
   uploadText: {
-    fontSize: 12,
-    fontWeight: "500",
-    color: "#3b82f6",
+    fontSize: TYPOGRAPHY.sizes.sm,
+    fontFamily: TYPOGRAPHY.families.semibold,
+    color: COLORS.neutral[0],
   },
   captureButton: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: "#3b82f6",
+    borderRadius: RADIUS.full,
+    overflow: 'hidden',
+    ...SHADOWS.xl,
+  },
+  captureGradient: {
+    width: responsive.wp(20),
+    height: responsive.wp(20),
+    borderRadius: RADIUS.full,
     justifyContent: "center",
     alignItems: "center",
-    elevation: 8,
-    shadowColor: "#3b82f6",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
   },
   captureInner: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: "#1d4ed8",
+    width: responsive.wp(16),
+    height: responsive.wp(16),
+    borderRadius: RADIUS.full,
+    backgroundColor: COLORS.surface.glass,
     justifyContent: "center",
     alignItems: "center",
   },
+
+  // Analyzing State
   analyzingContainer: {
+    flex: 1,
+    paddingTop: safeArea.top,
+    paddingBottom: safeArea.bottom,
+  },
+  analyzingBackground: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
   },
   analyzingContent: {
     alignItems: "center",
-    paddingHorizontal: 40,
+    paddingHorizontal: SPACING['2xl'],
+  },
+  analyzeIconContainer: {
+    marginBottom: SPACING['3xl'],
   },
   analyzeIcon: {
-    width: 96,
-    height: 96,
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
-    borderRadius: 48,
+    width: responsive.wp(24),
+    height: responsive.wp(24),
+    borderRadius: RADIUS.full,
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 32,
+    ...SHADOWS.xl,
   },
   analyzingTitle: {
-    fontSize: 28,
-    fontWeight: "700",
-    color: "#ffffff",
+    fontSize: TYPOGRAPHY.sizes['3xl'],
+    fontFamily: TYPOGRAPHY.families.bold,
+    color: COLORS.neutral[0],
     textAlign: "center",
-    marginBottom: 12,
+    marginBottom: SPACING.md,
+    lineHeight: TYPOGRAPHY.sizes['3xl'] * 1.2,
   },
   analyzingSubtitle: {
-    fontSize: 16,
-    fontWeight: "400",
-    color: "rgba(255, 255, 255, 0.8)",
+    fontSize: TYPOGRAPHY.sizes.lg,
+    fontFamily: TYPOGRAPHY.families.regular,
+    color: COLORS.surface.primary,
     textAlign: "center",
-    lineHeight: 24,
-    marginBottom: 40,
+    lineHeight: TYPOGRAPHY.sizes.lg * 1.4,
+    marginBottom: SPACING['3xl'],
+    opacity: 0.9,
   },
+
+  // Progress
   progressContainer: {
     width: "100%",
     alignItems: "center",
-    marginBottom: 32,
+    marginBottom: SPACING['3xl'],
+    backgroundColor: 'transparent',
   },
   progressBar: {
     width: "100%",
-    height: 6,
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
-    borderRadius: 3,
+    height: 8,
+    backgroundColor: COLORS.surface.glass,
+    borderRadius: RADIUS.md,
     overflow: "hidden",
-    marginBottom: 12,
+    marginBottom: SPACING.md,
   },
   progressFill: {
     height: "100%",
-    backgroundColor: "#10b981",
-    borderRadius: 3,
+    borderRadius: RADIUS.md,
+  },
+  progressGradient: {
+    position: 'absolute',
+    height: "100%",
+    borderRadius: RADIUS.md,
   },
   progressText: {
-    fontSize: 14,
-    fontWeight: "500",
-    color: "rgba(255, 255, 255, 0.8)",
+    fontSize: TYPOGRAPHY.sizes.base,
+    fontFamily: TYPOGRAPHY.families.semibold,
+    color: COLORS.surface.primary,
+    opacity: 0.9,
   },
+
+  // Step Indicators
   analysisSteps: {
     flexDirection: "row",
     justifyContent: "space-between",
     width: "100%",
-    paddingHorizontal: 20,
+    paddingHorizontal: SPACING.lg,
+    backgroundColor: 'transparent',
   },
   stepIndicator: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: SPACING.lg,
+    paddingVertical: SPACING.sm,
+    borderRadius: RADIUS.full,
+    backgroundColor: COLORS.surface.glass,
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.2)",
+    borderColor: COLORS.surface.primary,
   },
   activeStep: {
-    backgroundColor: "rgba(16, 185, 129, 0.2)",
-    borderColor: "#10b981",
+    backgroundColor: COLORS.secondary[500] + '30',
+    borderColor: COLORS.secondary[500],
   },
   stepText: {
-    fontSize: 12,
-    fontWeight: "500",
-    color: "rgba(255, 255, 255, 0.8)",
+    fontSize: TYPOGRAPHY.sizes.sm,
+    fontFamily: TYPOGRAPHY.families.medium,
+    color: COLORS.surface.primary,
+    marginLeft: SPACING.xs,
+  },
+  activeStepText: {
+    color: COLORS.secondary[500],
+    fontFamily: TYPOGRAPHY.families.semibold,
   },
 });

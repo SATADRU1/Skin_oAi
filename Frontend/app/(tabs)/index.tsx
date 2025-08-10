@@ -7,23 +7,79 @@ import {
   Scan,
   Shield,
   TrendingUp,
+  Sparkles,
+  Activity,
+  ChevronRight,
 } from "lucide-react-native";
 import {
   Image,
   ScrollView,
   StyleSheet,
   TouchableOpacity,
-  SafeAreaView,
-  StatusBar,
+  Animated,
+  Easing,
 } from "react-native";
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { scaleFont, responsive, getSafeAreaInsets } from '@/utils/responsive';
+import { COLORS, TYPOGRAPHY, SPACING, RADIUS, SHADOWS, ANIMATIONS } from '@/constants/DesignSystem';
+import { useEffect, useRef } from 'react';
 
 const safeArea = getSafeAreaInsets();
 
 export default function HomeScreen() {
   const router = useRouter();
+  
+  // Animation values
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(50)).current;
+  const scaleAnim = useRef(new Animated.Value(0.9)).current;
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+  
+  useEffect(() => {
+    // Start entrance animations
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: ANIMATIONS.slow,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: ANIMATIONS.slow,
+        easing: Easing.out(Easing.quad),
+        useNativeDriver: true,
+      }),
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        tension: 100,
+        friction: 8,
+        useNativeDriver: true,
+      })
+    ]).start();
+    
+    // Pulse animation for scan button
+    const pulseAnimation = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, {
+          toValue: 1.05,
+          duration: 2000,
+          easing: Easing.inOut(Easing.quad),
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulseAnim, {
+          toValue: 1,
+          duration: 2000,
+          easing: Easing.inOut(Easing.quad),
+          useNativeDriver: true,
+        })
+      ])
+    );
+    
+    pulseAnimation.start();
+    
+    return () => pulseAnimation.stop();
+  }, []);
 
   const recentScans = [
     {
@@ -69,95 +125,150 @@ export default function HomeScreen() {
   ];
 
   const stats = [
-    { icon: Scan, label: "Total Scans", value: "4", color: "#3b82f6" },
-    { icon: TrendingUp, label: "Accuracy", value: "94%", color: "#10b981" },
-    { icon: Shield, label: "Reliability", value: "99%", color: "#8b5cf6" },
+    { icon: Scan, label: "Total Scans", value: "4", color: COLORS.primary[500], gradient: COLORS.gradients.primary },
+    { icon: TrendingUp, label: "Accuracy", value: "94%", color: COLORS.secondary[500], gradient: COLORS.gradients.secondary },
+    { icon: Activity, label: "Health Score", value: "A+", color: COLORS.accent.purple, gradient: COLORS.gradients.cool },
   ];
 
   return (
-    // Replace SafeAreaView with ThemedView
     <ThemedView style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Header */}
-        <ThemedView style={styles.header}>
+        <Animated.View style={[
+          styles.header,
+          {
+            opacity: fadeAnim,
+            transform: [{ translateY: slideAnim }]
+          }
+        ]}>
           <ThemedView>
-            <ThemedText style={styles.greeting}>Hello there!</ThemedText>
-            <ThemedText style={styles.subtitle}>How can I help you today?</ThemedText>
+            <ThemedText style={styles.greeting}>Hello there! 👋</ThemedText>
+            <ThemedText style={styles.subtitle}>Let's check your skin health today</ThemedText>
           </ThemedView>
-          <ThemedView style={styles.profileIcon}>
-            <Award size={24} color="#3b82f6" />
-          </ThemedView>
-        </ThemedView>
+          <LinearGradient
+            colors={[COLORS.primary[100], COLORS.primary[200]]}
+            style={styles.profileIcon}
+          >
+            <Sparkles size={scaleFont(24)} color={COLORS.primary[600]} />
+          </LinearGradient>
+        </Animated.View>
 
         {/* Main Scan Button */}
-        <TouchableOpacity
-          style={styles.scanButtonContainer}
-          onPress={() => router.push("/scan")}
-          activeOpacity={0.9}
-        >
-          <LinearGradient
-            colors={["#3b82f6", "#1d4ed8"]}
-            style={styles.scanButton}
+        <Animated.View style={[{
+          transform: [{ scale: pulseAnim }]
+        }]}>
+          <TouchableOpacity
+            style={styles.scanButtonContainer}
+            onPress={() => router.push("/scan")}
+            activeOpacity={0.8}
           >
-            <ThemedView style={styles.scanIconContainer}>
-              <Camera size={32} color="#ffffff" strokeWidth={2.5} />
-            </ThemedView>
-            <ThemedView style={styles.scanContent} lightColor="transparent" darkColor="transparent">
-              <ThemedText style={styles.scanButtonText}>New Scan</ThemedText>
-              <ThemedText style={styles.scanButtonSubtitle}>
-                Analyze your skin condition
-              </ThemedText>
-            </ThemedView>
-          </LinearGradient>
-        </TouchableOpacity>
+            <LinearGradient
+              colors={COLORS.gradients.primary}
+              start={{x: 0, y: 0}}
+              end={{x: 1, y: 1}}
+              style={styles.scanButton}
+            >
+              <ThemedView style={styles.scanIconContainer}>
+                <Camera size={responsive.wp(8)} color={COLORS.neutral[0]} strokeWidth={2.5} />
+              </ThemedView>
+              <ThemedView style={styles.scanContent} lightColor="transparent" darkColor="transparent">
+                <ThemedText style={styles.scanButtonText}>AI Skin Analysis</ThemedText>
+                <ThemedText style={styles.scanButtonSubtitle}>
+                  Get instant results with advanced AI
+                </ThemedText>
+              </ThemedView>
+              <ChevronRight size={responsive.wp(6)} color={COLORS.surface.glass} />
+            </LinearGradient>
+          </TouchableOpacity>
+        </Animated.View>
 
         {/* Stats Section */}
-        <ThemedView style={styles.statsContainer}>
+        <Animated.View style={[
+          styles.statsContainer,
+          {
+            opacity: scaleAnim,
+            transform: [{ scale: scaleAnim }]
+          }
+        ]}>
           {stats.map((stat, index) => (
-            <ThemedView key={index} style={styles.statCard}>
-              <ThemedView style={[styles.statIconWrapper, { backgroundColor: `${stat.color}20` }]}>
-                <stat.icon size={24} color={stat.color} />
-              </ThemedView>
+            <TouchableOpacity key={index} style={styles.statCard} activeOpacity={0.7}>
+              <LinearGradient
+                colors={[`${stat.color}15`, `${stat.color}25`]}
+                style={styles.statIconWrapper}
+              >
+                <stat.icon size={responsive.wp(6)} color={stat.color} strokeWidth={2} />
+              </LinearGradient>
               <ThemedText style={styles.statValue}>{stat.value}</ThemedText>
               <ThemedText style={styles.statLabel}>{stat.label}</ThemedText>
-            </ThemedView>
+            </TouchableOpacity>
           ))}
-        </ThemedView>
+        </Animated.View>
 
         {/* Recent Scans Section */}
-        <ThemedView style={styles.recentScansHeader}>
-          <ThemedText style={styles.sectionTitle}>Recent Scans</ThemedText>
-          <TouchableOpacity onPress={() => router.push("/history")}>
+        <Animated.View style={[
+          styles.recentScansHeader,
+          {
+            opacity: fadeAnim,
+            transform: [{ translateY: slideAnim }]
+          }
+        ]}>
+          <ThemedView>
+            <ThemedText style={styles.sectionTitle}>Recent Analysis</ThemedText>
+            <ThemedText style={styles.sectionSubtitle}>Your skin health journey</ThemedText>
+          </ThemedView>
+          <TouchableOpacity 
+            onPress={() => router.push("/history")}
+            style={styles.viewAllButton}
+          >
             <ThemedText style={styles.viewAllText}>View All</ThemedText>
+            <ChevronRight size={responsive.wp(4)} color={COLORS.primary[500]} />
           </TouchableOpacity>
-        </ThemedView>
+        </Animated.View>
 
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.recentScansList}
         >
-          {recentScans.map((scan) => (
-            <TouchableOpacity
+          {recentScans.map((scan, index) => (
+            <Animated.View
               key={scan.id}
-              style={styles.scanCard}
-              onPress={() => router.push({ pathname: "/result", params: { image: scan.image, text: scan.condition } })}
+              style={[
+                { opacity: scaleAnim },
+                { transform: [{ translateX: slideAnim }] }
+              ]}
             >
-              <Image source={{ uri: scan.image }} style={styles.scanImage} />
-              <ThemedView style={styles.scanCardContent}>
-                <ThemedText style={styles.scanCondition}>{scan.condition}</ThemedText>
-                <ThemedView style={styles.scanDetails}>
-                  <Clock size={14} color="#6b7280" />
-                  <ThemedText style={styles.scanDate}>{scan.date}</ThemedText>
+              <TouchableOpacity
+                style={styles.scanCard}
+                onPress={() => router.push({ pathname: "/result", params: { image: scan.image, text: scan.condition } })}
+                activeOpacity={0.9}
+              >
+                <ThemedView style={styles.scanImageContainer}>
+                  <Image source={{ uri: scan.image }} style={styles.scanImage} />
+                  <LinearGradient
+                    colors={['transparent', 'rgba(0,0,0,0.7)']}
+                    style={styles.scanImageOverlay}
+                  />
+                  <ThemedView style={styles.confidenceBadge}>
+                    <ThemedText style={styles.confidenceText}>{scan.confidence}%</ThemedText>
+                  </ThemedView>
                 </ThemedView>
-                <ThemedView style={styles.scanDetails}>
-                  <Shield size={14} color="#6b7280" />
-                  <ThemedText style={styles.scanConfidence}>
-                    Confidence: {scan.confidence}%
-                  </ThemedText>
+                <ThemedView style={styles.scanCardContent}>
+                  <ThemedText style={styles.scanCondition}>{scan.condition}</ThemedText>
+                  <ThemedView style={styles.scanDetails}>
+                    <Clock size={responsive.wp(3)} color={COLORS.neutral[400]} />
+                    <ThemedText style={styles.scanDate}>{scan.date}</ThemedText>
+                  </ThemedView>
+                  <ThemedView style={[styles.severityBadge, {
+                    backgroundColor: scan.severity === 'None' ? COLORS.secondary[100] : COLORS.accent.orange + '20'
+                  }]}>
+                    <ThemedText style={[styles.severityText, {
+                      color: scan.severity === 'None' ? COLORS.secondary[600] : COLORS.accent.orange
+                    }]}>{scan.severity}</ThemedText>
+                  </ThemedView>
                 </ThemedView>
-              </ThemedView>
-            </TouchableOpacity>
+              </TouchableOpacity>
+            </Animated.View>
           ))}
         </ScrollView>
       </ScrollView>
@@ -170,158 +281,219 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingTop: safeArea.top,
     paddingBottom: safeArea.bottom,
+    backgroundColor: COLORS.neutral[50],
   },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingHorizontal: responsive.wp(5),
-    paddingVertical: responsive.hp(2.5),
+    paddingHorizontal: SPACING.lg,
+    paddingVertical: SPACING.xl,
   },
   greeting: {
-    fontSize: scaleFont(24),
-    fontFamily: "Inter-Bold",
+    fontSize: TYPOGRAPHY.sizes['3xl'],
+    fontFamily: TYPOGRAPHY.families.bold,
+    color: COLORS.neutral[900],
+    lineHeight: TYPOGRAPHY.sizes['3xl'] * 1.2,
   },
   subtitle: {
-    fontSize: scaleFont(16),
-    fontFamily: "Inter-Regular",
-    marginTop: 2,
+    fontSize: TYPOGRAPHY.sizes.lg,
+    fontFamily: TYPOGRAPHY.families.regular,
+    color: COLORS.neutral[600],
+    marginTop: SPACING.xs,
+    lineHeight: TYPOGRAPHY.sizes.lg * 1.4,
   },
   profileIcon: {
-    width: responsive.wp(12),
-    height: responsive.wp(12),
-    borderRadius: responsive.wp(6),
-    backgroundColor: "#e0f2fe",
+    width: responsive.wp(14),
+    height: responsive.wp(14),
+    borderRadius: RADIUS.xl,
     justifyContent: "center",
     alignItems: "center",
+    ...SHADOWS.md,
   },
   scanButtonContainer: {
-    marginHorizontal: responsive.wp(5),
-    borderRadius: 15,
+    marginHorizontal: SPACING.lg,
+    borderRadius: RADIUS['2xl'],
     overflow: "hidden",
-    marginBottom: responsive.hp(3),
-    elevation: 5,
-    shadowColor: "#3b82f6",
-    shadowOffset: { width: 0, height: 5 },
-    shadowOpacity: 0.3,
-    shadowRadius: 10,
+    marginBottom: SPACING['3xl'],
+    ...SHADOWS.xl,
+    shadowColor: COLORS.primary[500],
   },
   scanButton: {
     flexDirection: "row",
     alignItems: "center",
-    padding: responsive.wp(5),
+    paddingHorizontal: SPACING.xl,
+    paddingVertical: SPACING.lg,
+    minHeight: responsive.hp(8),
   },
   scanIconContainer: {
-    width: responsive.wp(15),
-    height: responsive.wp(15),
-    borderRadius: responsive.wp(7.5),
-    backgroundColor: "rgba(255,255,255,0.2)",
+    width: responsive.wp(16),
+    height: responsive.wp(16),
+    borderRadius: RADIUS.full,
+    backgroundColor: COLORS.surface.glass,
     justifyContent: "center",
     alignItems: "center",
-    marginRight: 15,
+    marginRight: SPACING.lg,
   },
   scanContent: {
     flex: 1,
   },
   scanButtonText: {
-    fontSize: scaleFont(22),
-    fontFamily: "Inter-SemiBold",
-    color: "#ffffff",
+    fontSize: TYPOGRAPHY.sizes['2xl'],
+    fontFamily: TYPOGRAPHY.families.bold,
+    color: COLORS.neutral[0],
+    lineHeight: TYPOGRAPHY.sizes['2xl'] * 1.2,
   },
   scanButtonSubtitle: {
-    fontSize: scaleFont(14),
-    fontFamily: "Inter-Regular",
-    color: "rgba(255,255,255,0.8)",
+    fontSize: TYPOGRAPHY.sizes.base,
+    fontFamily: TYPOGRAPHY.families.regular,
+    color: COLORS.surface.primary,
+    marginTop: SPACING.xs,
+    opacity: 0.9,
   },
   statsContainer: {
     flexDirection: "row",
     justifyContent: "space-around",
-    marginHorizontal: responsive.wp(5),
-    marginBottom: responsive.hp(3),
-    borderRadius: 15,
-    paddingVertical: responsive.hp(2.5),
-    elevation: 3,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
+    marginHorizontal: SPACING.lg,
+    marginBottom: SPACING['3xl'],
+    backgroundColor: COLORS.surface.primary,
+    borderRadius: RADIUS['2xl'],
+    paddingVertical: SPACING.xl,
+    ...SHADOWS.lg,
   },
   statCard: {
     alignItems: "center",
+    paddingHorizontal: SPACING.sm,
   },
   statIconWrapper: {
-    width: responsive.wp(12),
-    height: responsive.wp(12),
-    borderRadius: responsive.wp(6),
+    width: responsive.wp(14),
+    height: responsive.wp(14),
+    borderRadius: RADIUS.xl,
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 8,
+    marginBottom: SPACING.md,
+    ...SHADOWS.sm,
   },
   statValue: {
-    fontSize: scaleFont(20),
-    fontFamily: "Inter-Bold",
+    fontSize: TYPOGRAPHY.sizes['2xl'],
+    fontFamily: TYPOGRAPHY.families.bold,
+    color: COLORS.neutral[800],
+    lineHeight: TYPOGRAPHY.sizes['2xl'] * 1.1,
   },
   statLabel: {
-    fontSize: scaleFont(14),
-    fontFamily: "Inter-Regular",
+    fontSize: TYPOGRAPHY.sizes.sm,
+    fontFamily: TYPOGRAPHY.families.medium,
+    color: COLORS.neutral[500],
+    textAlign: 'center',
+    marginTop: SPACING.xs,
   },
   recentScansHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
-    marginHorizontal: responsive.wp(5),
-    marginBottom: responsive.hp(2),
+    alignItems: "flex-end",
+    marginHorizontal: SPACING.lg,
+    marginBottom: SPACING.lg,
   },
   sectionTitle: {
-    fontSize: scaleFont(20),
-    fontFamily: "Inter-SemiBold",
+    fontSize: TYPOGRAPHY.sizes['2xl'],
+    fontFamily: TYPOGRAPHY.families.bold,
+    color: COLORS.neutral[800],
+    lineHeight: TYPOGRAPHY.sizes['2xl'] * 1.2,
+  },
+  sectionSubtitle: {
+    fontSize: TYPOGRAPHY.sizes.sm,
+    fontFamily: TYPOGRAPHY.families.regular,
+    color: COLORS.neutral[500],
+    marginTop: SPACING.xs / 2,
+  },
+  viewAllButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.sm,
+    borderRadius: RADIUS.lg,
+    backgroundColor: COLORS.primary[50],
   },
   viewAllText: {
-    fontSize: scaleFont(14),
-    fontFamily: "Inter-Medium",
-    color: "#3b82f6",
+    fontSize: TYPOGRAPHY.sizes.sm,
+    fontFamily: TYPOGRAPHY.families.semibold,
+    color: COLORS.primary[600],
+    marginRight: SPACING.xs,
   },
   recentScansList: {
-    paddingHorizontal: responsive.wp(5),
-    paddingBottom: responsive.hp(2),
+    paddingHorizontal: SPACING.lg,
+    paddingBottom: SPACING['2xl'],
   },
   scanCard: {
-    width: responsive.wp(40),
-    marginRight: responsive.wp(4),
-    borderRadius: 15,
+    width: responsive.wp(45),
+    marginRight: SPACING.lg,
+    borderRadius: RADIUS['2xl'],
+    backgroundColor: COLORS.surface.primary,
     overflow: "hidden",
-    elevation: 3,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
+    ...SHADOWS.lg,
+  },
+  scanImageContainer: {
+    position: 'relative',
   },
   scanImage: {
     width: "100%",
-    height: responsive.hp(15),
+    height: responsive.hp(18),
     resizeMode: "cover",
   },
+  scanImageOverlay: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: '50%',
+  },
+  confidenceBadge: {
+    position: 'absolute',
+    top: SPACING.md,
+    right: SPACING.md,
+    backgroundColor: COLORS.surface.primary,
+    borderRadius: RADIUS.lg,
+    paddingHorizontal: SPACING.sm,
+    paddingVertical: SPACING.xs,
+    ...SHADOWS.sm,
+  },
+  confidenceText: {
+    fontSize: TYPOGRAPHY.sizes.xs,
+    fontFamily: TYPOGRAPHY.families.bold,
+    color: COLORS.secondary[600],
+  },
   scanCardContent: {
-    padding: responsive.wp(3),
+    padding: SPACING.lg,
   },
   scanCondition: {
-    fontSize: scaleFont(16),
-    fontFamily: "Inter-SemiBold",
-    marginBottom: 5,
+    fontSize: TYPOGRAPHY.sizes.lg,
+    fontFamily: TYPOGRAPHY.families.bold,
+    color: COLORS.neutral[800],
+    marginBottom: SPACING.sm,
+    lineHeight: TYPOGRAPHY.sizes.lg * 1.2,
   },
   scanDetails: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 3,
+    marginBottom: SPACING.sm,
   },
   scanDate: {
-    fontSize: scaleFont(12),
-    fontFamily: "Inter-Regular",
-    marginLeft: 5,
+    fontSize: TYPOGRAPHY.sizes.xs,
+    fontFamily: TYPOGRAPHY.families.regular,
+    color: COLORS.neutral[500],
+    marginLeft: SPACING.xs,
   },
-  scanConfidence: {
-    fontSize: scaleFont(12),
-    fontFamily: "Inter-Regular",
-    marginLeft: 5,
+  severityBadge: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: SPACING.sm,
+    paddingVertical: SPACING.xs / 2,
+    borderRadius: RADIUS.md,
+    marginTop: SPACING.xs,
+  },
+  severityText: {
+    fontSize: TYPOGRAPHY.sizes.xs,
+    fontFamily: TYPOGRAPHY.families.semibold,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
 });
