@@ -18,7 +18,7 @@ export const CONFIG = {
   },
   
   // Timeout settings
-  TIMEOUT: 30000, // 30 seconds
+  TIMEOUT: 45000, // 45 seconds for better handling
   
   // App settings
   APP_NAME: 'SkinOAI',

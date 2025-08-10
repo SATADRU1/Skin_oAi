@@ -124,7 +124,7 @@ export default function HomeScreen() {
   function getTrendColor(trend: string) {
     switch (trend) {
       case 'Improving': return COLORS.accent.emerald;
-      case 'Stable': return COLORS.accent.green;
+      case 'Stable': return COLORS.accent.emerald;
       case 'Declining': return COLORS.accent.orange;
       default: return COLORS.neutral[500];
     }
@@ -133,7 +133,7 @@ export default function HomeScreen() {
   function getTrendGradient(trend: string) {
     switch (trend) {
       case 'Improving': return COLORS.gradients.secondary;
-      case 'Stable': return COLORS.gradients.success;
+      case 'Stable': return COLORS.gradients.secondary;
       case 'Declining': return COLORS.gradients.warm;
       default: return COLORS.gradients.dark;
     }
@@ -606,13 +606,13 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.lg,
     paddingHorizontal: SPACING.lg,
   },
-  sectionTitle: {
+  diseaseSectionTitle: {
     fontSize: TYPOGRAPHY.sizes.xl,
     fontFamily: TYPOGRAPHY.families.bold,
     color: COLORS.neutral[900],
     marginBottom: SPACING.xs,
   },
-  sectionSubtitle: {
+  diseaseSectionSubtitle: {
     fontSize: TYPOGRAPHY.sizes.sm,
     fontFamily: TYPOGRAPHY.families.regular,
     color: COLORS.neutral[600],
@@ -634,7 +634,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: SPACING.lg,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.surface.border,
+    borderBottomColor: COLORS.neutral[200],
   },
   diseaseName: {
     fontSize: TYPOGRAPHY.sizes.lg,

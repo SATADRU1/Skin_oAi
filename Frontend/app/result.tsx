@@ -2,11 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { predictSkinCondition, Recommendations } from '@/utils/api';
+import { useScanData } from '@/contexts/ScanContext';
+import { formatDateTime } from '@/utils/scanUtils';
 
-// Working version without context to avoid hook errors
+// Working version with context integration to save scan results
 export default function ResultScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
+  const { addScan } = useScanData();
 
   // Expecting params.image (base64 string) and params.imageUri (uri string)
   const imageBase64 = params.image as string | undefined;
@@ -17,6 +20,7 @@ export default function ResultScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showDetailedRecommendations, setShowDetailedRecommendations] = useState(false);
+  const [scanSaved, setScanSaved] = useState(false);
 
   useEffect(() => {
     const fetchResult = async () => {
@@ -42,6 +46,23 @@ export default function ResultScreen() {
         setResult(analysisResult);
         console.log('Analysis complete:', analysisResult.predicted_class);
         
+        // Save the scan result to context for history and statistics
+        if (!scanSaved) {
+          const now = new Date();
+          const { date, time } = formatDateTime(now);
+          
+          const scanResult = {
+            label: analysisResult.predicted_class || 'Unknown',
+            accuracy: analysisResult.confidence || 0,
+            severity: determineSeverity(analysisResult.predicted_class, analysisResult.confidence),
+            imageUri: imageUri || `data:image/jpeg;base64,${imageBase64}`,
+          };
+          
+          addScan(scanResult);
+          setScanSaved(true);
+          console.log('Scan result saved to context:', scanResult);
+        }
+        
         setLoading(false);
       } catch (error: any) {
         setError(error.message || 'Failed to analyze image');
@@ -50,7 +71,37 @@ export default function ResultScreen() {
     };
     
     fetchResult();
-  }, [imageBase64, textInfo]);
+  }, [imageBase64, textInfo, addScan, scanSaved]);
+
+  // Helper function to determine severity based on condition and confidence
+  const determineSeverity = (condition: string, confidence: number): 'None' | 'Mild' | 'Moderate' | 'Severe' => {
+    const conditionLower = condition.toLowerCase();
+    
+    // High-risk conditions
+    if (conditionLower.includes('melanoma') || conditionLower.includes('cancer') || conditionLower.includes('malignant')) {
+      return 'Severe';
+    }
+    
+    // Medium-risk conditions
+    if (conditionLower.includes('psoriasis') || conditionLower.includes('eczema') || conditionLower.includes('dermatitis')) {
+      return 'Moderate';
+    }
+    
+    // Low-risk conditions
+    if (conditionLower.includes('acne') || conditionLower.includes('wart') || conditionLower.includes('mole')) {
+      return 'Mild';
+    }
+    
+    // Healthy skin
+    if (conditionLower.includes('healthy') || conditionLower.includes('normal')) {
+      return 'None';
+    }
+    
+    // Default based on confidence
+    if (confidence > 80) return 'Moderate';
+    if (confidence > 60) return 'Mild';
+    return 'None';
+  };
 
   const getUrgencyColor = (urgency: string) => {
     switch (urgency?.toLowerCase()) {
@@ -210,9 +261,19 @@ export default function ResultScreen() {
         )}
       </View>
       
-      <TouchableOpacity style={styles.button} onPress={() => router.back()}>
-        <Text style={styles.buttonText}>Back to Scan</Text>
-      </TouchableOpacity>
+      <View style={styles.buttonContainer}>
+        <TouchableOpacity style={[styles.button, styles.homeButton]} onPress={() => router.push('/(tabs)')}>  
+          <Text style={styles.buttonText}>Home</Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity style={[styles.button, styles.historyButton]} onPress={() => router.push('/(tabs)/history')}>
+          <Text style={styles.buttonText}>History</Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity style={styles.button} onPress={() => router.back()}>
+          <Text style={styles.buttonText}>Back</Text>
+        </TouchableOpacity>
+      </View>
     </ScrollView>
   );
 }
@@ -383,13 +444,27 @@ const styles = StyleSheet.create({
     color: '#92400e',
     lineHeight: 20,
   },
-  button: {
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    width: '100%',
     marginTop: 24,
+    gap: 8,
+  },
+  button: {
+    flex: 1,
+    marginTop: 0,
     backgroundColor: '#3b82f6',
     paddingVertical: 14,
-    paddingHorizontal: 32,
+    paddingHorizontal: 16,
     borderRadius: 8,
     alignItems: 'center',
+  },
+  homeButton: {
+    backgroundColor: '#10b981',
+  },
+  historyButton: {
+    backgroundColor: '#f59e0b',
   },
   buttonText: {
     color: '#fff',

@@ -46,5 +46,6 @@ export interface ScanContextType {
   stats: ScanStats;
   addScan: (result: Omit<ScanResult, 'id' | 'createdAt'>) => Promise<void>;
   deleteScan: (id: string) => Promise<void>;
+  clearAllScans: () => Promise<void>;
   isLoading: boolean;
 }

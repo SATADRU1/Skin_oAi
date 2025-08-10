@@ -1,4 +1,4 @@
-import { Calendar, Filter, TrendingUp, Activity, BarChart3, TrendingDown, Search, ArrowUpRight, Clock, Shield, ChevronDown, Trash2 } from "lucide-react-native";
+import { Calendar, Filter, TrendingUp, Activity, BarChart3, TrendingDown, Search, ArrowUpRight, Clock, Shield, ChevronDown, Trash2, AlertTriangle } from "lucide-react-native";
 import { Image, ScrollView, StyleSheet, TouchableOpacity, Animated, Easing, FlatList, Alert } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { ThemedText } from "@/components/ThemedText";
@@ -14,7 +14,7 @@ const safeArea = getSafeAreaInsets();
 
 export default function HistoryScreen() {
   const [selectedFilter, setSelectedFilter] = useState('All');
-  const { scans, stats, deleteScan, isLoading } = useScanData();
+  const { scans, stats, deleteScan, clearAllScans, isLoading } = useScanData();
   
   // Animation values
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -61,6 +61,31 @@ export default function HistoryScreen() {
               await deleteScan(scanId);
             } catch (error) {
               Alert.alert('Error', 'Failed to delete scan. Please try again.');
+            }
+          },
+        },
+      ],
+    );
+  };
+
+  // Handle clear all history
+  const handleClearAllHistory = () => {
+    Alert.alert(
+      'Clear All History',
+      `Are you sure you want to delete all ${stats.totalScans} scans? This action cannot be undone.`,
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Clear All',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await clearAllScans();
+            } catch (error) {
+              Alert.alert('Error', 'Failed to clear history. Please try again.');
             }
           },
         },
@@ -393,6 +418,28 @@ export default function HistoryScreen() {
           ))}
         </ScrollView>
       </Animated.View>
+
+      {/* Clear History Button */}
+      {stats.totalScans > 0 && (
+        <Animated.View style={[
+          styles.clearHistoryContainer,
+          { opacity: fadeAnim }
+        ]}>
+          <TouchableOpacity 
+            style={styles.clearHistoryButton}
+            onPress={handleClearAllHistory}
+            activeOpacity={0.8}
+          >
+            <LinearGradient
+              colors={[COLORS.error, '#DC2626']}
+              style={styles.clearHistoryGradient}
+            >
+              <AlertTriangle size={responsive.wp(5)} color={COLORS.neutral[0]} strokeWidth={2} />
+              <ThemedText style={styles.clearHistoryText}>Clear All History</ThemedText>
+            </LinearGradient>
+          </TouchableOpacity>
+        </Animated.View>
+      )}
 
       {/* Enhanced Scan List */}
       {sortedScans.length > 0 ? (
@@ -837,5 +884,27 @@ const styles = StyleSheet.create({
     fontSize: TYPOGRAPHY.sizes.xs,
     fontFamily: TYPOGRAPHY.families.regular,
     color: COLORS.neutral[500],
+  },
+  clearHistoryContainer: {
+    paddingHorizontal: SPACING.sm,
+    marginBottom: SPACING.md,
+  },
+  clearHistoryButton: {
+    borderRadius: RADIUS.lg,
+    overflow: 'hidden',
+    ...SHADOWS.md,
+  },
+  clearHistoryGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: SPACING.md,
+    paddingHorizontal: SPACING.lg,
+    gap: SPACING.sm,
+  },
+  clearHistoryText: {
+    fontSize: TYPOGRAPHY.sizes.base,
+    fontFamily: TYPOGRAPHY.families.bold,
+    color: COLORS.neutral[0],
   },
 });

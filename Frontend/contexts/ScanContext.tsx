@@ -89,11 +89,25 @@ export const ScanProvider: React.FC<ScanProviderProps> = ({ children }) => {
     }
   };
 
+  // Clear all scans
+  const clearAllScans = async (): Promise<void> => {
+    try {
+      setScans([]);
+      await saveScansToStorage([]);
+      
+      console.log('All scans cleared successfully');
+    } catch (error) {
+      console.error('Error clearing all scans:', error);
+      throw error;
+    }
+  };
+
   const value: ScanContextType = {
     scans,
     stats,
     addScan,
     deleteScan,
+    clearAllScans,
     isLoading,
   };
 

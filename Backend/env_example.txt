@@ -2,5 +2,7 @@
 # Get your API key from: https://makersuite.google.com/app/apikey
 GEMINI_API_KEY=your_gemini_api_key_here
 
-# Roboflow API Configuration (already configured in app.py)
-# ROBOFLOW_API_KEY=your_roboflow_api_key_here 
+# Roboflow API Configuration
+ROBOFLOW_API_KEY=QJXTDtMOkjDsKyTi0xhQ
+ROBOFLOW_PROJECT_ID=skin-ai-dataset-training-gggjo-v2myr
+ROBOFLOW_WORKSPACE=your_workspace_name 
